@@ -4,9 +4,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/JojiiOfficial/Remotebuild/handlers"
 	"github.com/JojiiOfficial/Remotebuild/models"
-	"github.com/jinzhu/gorm"
 
 	"github.com/gorilla/mux"
 
@@ -22,8 +20,8 @@ type APIService struct {
 }
 
 //NewAPIService create new API service
-func NewAPIService(config *models.Config, db *gorm.DB) *APIService {
-	router := handlers.NewRouter(config, db)
+func NewAPIService(config *models.Config, getRouter func() *mux.Router) *APIService {
+	router := getRouter()
 
 	var httpServer, httpsServer *http.Server
 

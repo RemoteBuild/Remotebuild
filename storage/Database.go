@@ -24,6 +24,7 @@ func ConnectToDatabase(config *models.Config) (*gorm.DB, error) {
 	err = db.AutoMigrate(
 		&models.Role{},
 		&models.LoginSession{},
+		&models.User{},
 	).Error
 
 	//Return error if automigration fails

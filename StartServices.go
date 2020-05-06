@@ -7,7 +7,9 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/JojiiOfficial/Remotebuild/handlers"
 	"github.com/JojiiOfficial/Remotebuild/services"
+	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
 
 	log "github.com/sirupsen/logrus"
@@ -16,14 +18,21 @@ import (
 // Services
 var (
 	apiService     *services.APIService     // Handle endpoints
+	jobService     *services.JobService     // Handle Jobs
 	cleanupService *services.CleanupService // Cleanup db stuff
 )
 
 func startAPI() {
 	log.Info("Starting version " + version)
 
+	// Create and start the jobservice
+	jobService = services.NewJobService(config, db)
+	jobService.Start()
+
 	// Create and start required services
-	apiService = services.NewAPIService(config, db)
+	apiService = services.NewAPIService(config, func() *mux.Router {
+		return handlers.NewRouter(config, db, jobService)
+	})
 	apiService.Start()
 
 	cleanupService = services.NewClienupService(config, db)

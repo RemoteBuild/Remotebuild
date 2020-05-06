@@ -106,7 +106,7 @@ func InitConfig(confFile string, createMode bool) (*Config, bool) {
 			Server: configServer{
 				Database: configDBstruct{
 					Host:         "localhost",
-					DatabasePort: 3306,
+					DatabasePort: 5432,
 					SSLMode:      "require",
 				},
 				AllowRegistration:         false,

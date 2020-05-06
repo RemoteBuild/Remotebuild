@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/JojiiOfficial/Remotebuild/models"
+	"github.com/JojiiOfficial/Remotebuild/services"
 
 	"github.com/JojiiOfficial/gaw"
 	"github.com/jinzhu/gorm"
@@ -15,7 +16,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-//Route for REST
+// Route for REST
 type Route struct {
 	Name        string
 	Method      HTTPMethod
@@ -24,10 +25,10 @@ type Route struct {
 	HandlerType requestType
 }
 
-//HTTPMethod http method. GET, POST, DELETE, HEADER, etc...
+// HTTPMethod http method. GET, POST, DELETE, HEADER, etc...
 type HTTPMethod string
 
-//HTTP methods
+// HTTP methods
 const (
 	GetMethod    HTTPMethod = "GET"
 	POSTMethod   HTTPMethod = "POST"
@@ -43,13 +44,13 @@ const (
 	optionalTokenRequest
 )
 
-//Routes all REST routes
+// Routes all REST routes
 type Routes []Route
 
-//RouteFunction function for handling a route
+// RouteFunction function for handling a route
 type RouteFunction func(HandlerData, http.ResponseWriter, *http.Request)
 
-//Routes
+// Routes
 var (
 	routes = Routes{
 		// Ping
@@ -79,10 +80,11 @@ var (
 )
 
 //NewRouter create new router
-func NewRouter(config *models.Config, db *gorm.DB) *mux.Router {
+func NewRouter(config *models.Config, db *gorm.DB, jobService *services.JobService) *mux.Router {
 	handlerData := HandlerData{
-		Config: config,
-		Db:     db,
+		Config:     config,
+		Db:         db,
+		JobService: jobService,
 	}
 
 	router := mux.NewRouter().StrictSlash(true)

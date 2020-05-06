@@ -45,23 +45,8 @@ const (
 	// HeaderContentType contenttype of response
 	HeaderContentType string = "Content-Type"
 
-	// HeaderFileName filename header
-	HeaderFileName string = "X-Filename"
-
-	// HeaderFileID fileid header
-	HeaderFileID string = "X-FileID"
-
-	// HeaderEncryption encryption header
-	HeaderEncryption string = "X-Encryption"
-
-	// HeaderRequest request content
-	HeaderRequest string = "Request"
-
 	// HeaderContentLength request content length
 	HeaderContentLength string = "ContentLength"
-
-	// HeaderChecksum files checksum
-	HeaderChecksum string = "Checksum"
 )
 
 // StringResponse response containing only one string

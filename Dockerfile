@@ -1,9 +1,9 @@
 
-FROM golang:1.14.1-alpine3.11 as builder1
+FROM golang:1.14.2-alpine3.11 as builder1
 
 # Setting up environment for builder1
 ENV GO111MODULE=on
-WORKDIR /app/dmanager
+WORKDIR /app/remoteBuild
 
 # install required package(s)
 RUN apk --no-cache add ca-certificates git
@@ -20,7 +20,6 @@ COPY ./constants/*.go ./constants/
 COPY ./services/*.go ./services/
 COPY ./handlers/*.go ./handlers/
 COPY ./storage/*.go ./storage/
-COPY ./handlers/web/*.go ./handlers/web/
 
 # Compile
 RUN go build -o main
@@ -35,8 +34,7 @@ COPY --from=builder1 /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certif
 WORKDIR /app
 RUN mkdir /app/data/
 
-COPY --from=builder1 /app/dmanager/main .
-COPY ./html ./html
+COPY --from=builder1 /app/remoteBuild/main .
 
 # Set Debuglevel and start the server
 ENV DM_LOG_LEVEL debug
