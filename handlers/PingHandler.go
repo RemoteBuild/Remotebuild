@@ -3,7 +3,7 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/DataManager-Go/DataManagerServer/models"
+	"github.com/JojiiOfficial/Remotebuild/models"
 )
 
 //Ping handles ping request

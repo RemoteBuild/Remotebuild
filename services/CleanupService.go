@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/DataManager-Go/DataManagerServer/models"
+	"github.com/JojiiOfficial/Remotebuild/models"
 	"github.com/jinzhu/gorm"
 	log "github.com/sirupsen/logrus"
 )

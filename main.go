@@ -5,11 +5,10 @@ import (
 	"os"
 	"time"
 
+	"github.com/JojiiOfficial/Remotebuild/constants"
+	"github.com/JojiiOfficial/Remotebuild/models"
+	"github.com/JojiiOfficial/Remotebuild/storage"
 	"github.com/JojiiOfficial/gaw"
-
-	"github.com/DataManager-Go/DataManagerServer/constants"
-	"github.com/DataManager-Go/DataManagerServer/models"
-	"github.com/DataManager-Go/DataManagerServer/storage"
 
 	"github.com/jinzhu/gorm"
 	log "github.com/sirupsen/logrus"

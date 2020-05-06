@@ -7,7 +7,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/DataManager-Go/DataManagerServer/services"
+	"github.com/JojiiOfficial/Remotebuild/services"
 	"github.com/jinzhu/gorm"
 
 	log "github.com/sirupsen/logrus"

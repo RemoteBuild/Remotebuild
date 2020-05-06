@@ -4,9 +4,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/DataManager-Go/DataManagerServer/handlers"
-	"github.com/DataManager-Go/DataManagerServer/models"
-
+	"github.com/JojiiOfficial/Remotebuild/handlers"
+	"github.com/JojiiOfficial/Remotebuild/models"
 	"github.com/jinzhu/gorm"
 
 	"github.com/gorilla/mux"
@@ -86,20 +85,3 @@ func (service *APIService) Start() {
 		})()
 	}
 }
-
-// ConnContext: func(ctx context.Context, c net.Conn) context.Context {
-// 	connectionCancel, cancelWriteTimeout := context.WithCancel(ctx)
-// 	go func() {
-// 		defer cancelWriteTimeout()
-// 		_ = <-connectionCancel.Done()
-// 		if err := connectionCancel.Err(); err == context.DeadlineExceeded {
-// 			fmt.Println("a")
-// 			c.Close()
-// 		}
-// 	}()
-// 	return context.WithValue(ctx, ctx.Value(http.ServerContextKey), cancelWriteTimeout)
-// },
-// if f, ok := ctx.Value(ctx.Value(http.ServerContextKey)).(context.CancelFunc); ok {
-// 							f()
-// 						}
-// 						// sendResponse(w, models.ResponseError, "timeout", nil, http.StatusRequestTimeout)

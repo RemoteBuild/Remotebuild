@@ -9,7 +9,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/DataManager-Go/DataManagerServer/models"
+	"github.com/JojiiOfficial/Remotebuild/models"
 	"github.com/JojiiOfficial/gaw"
 	log "github.com/sirupsen/logrus"
 )

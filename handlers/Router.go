@@ -6,7 +6,7 @@ import (
 	"net/http/pprof"
 	"time"
 
-	"github.com/DataManager-Go/DataManagerServer/models"
+	"github.com/JojiiOfficial/Remotebuild/models"
 
 	"github.com/JojiiOfficial/gaw"
 	"github.com/jinzhu/gorm"

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/DataManager-Go/DataManagerServer/models"
+	"github.com/JojiiOfficial/Remotebuild/models"
 )
 
 func handleAndSendError(err error, w http.ResponseWriter, message string, statusCode int) bool {
