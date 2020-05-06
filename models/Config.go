@@ -23,11 +23,6 @@ type webserverConf struct {
 	Profiling            bool
 	MaxHeaderLength      uint  `default:"8000" required:"true"`
 	MaxRequestBodyLength int64 `default:"10000" required:"true"`
-	MaxUploadFileLength  int64 `default:"1000000000" required:"true"`
-	DownloadFileBuffer   int   `default:"100000" required:"true"`
-	UserAgentsRawfile    []string
-	MaxPreviewFilesize   int64  `default:"50000"`
-	HTMLFiles            string `default:"./html/" required:"true"`
 	ReadTimeout          time.Duration
 	WriteTimeout         time.Duration
 	HTTP                 configHTTPstruct
@@ -36,7 +31,6 @@ type webserverConf struct {
 
 type configServer struct {
 	Database                  configDBstruct
-	PathConfig                pathConfig
 	Roles                     roleConfig
 	AllowRegistration         bool          `default:"false"`
 	DeleteUnusedSessionsAfter time.Duration `default:"10m"`
@@ -45,10 +39,6 @@ type configServer struct {
 type roleConfig struct {
 	DefaultRole uint `required:"true"`
 	Roles       []Role
-}
-
-type pathConfig struct {
-	FileStore string `required:"true"`
 }
 
 type configDBstruct struct {
@@ -119,48 +109,26 @@ func InitConfig(confFile string, createMode bool) (*Config, bool) {
 					DatabasePort: 3306,
 					SSLMode:      "require",
 				},
-				PathConfig: pathConfig{
-					FileStore: "./files",
-				},
 				AllowRegistration:         false,
 				DeleteUnusedSessionsAfter: 10 * time.Minute,
 				Roles: roleConfig{
 					DefaultRole: 1,
 					Roles: []Role{
 						{
-							ID:                     1,
-							RoleName:               "user",
-							IsAdmin:                false,
-							CreateNamespaces:       true,
-							AccesForeignNamespaces: 0,
-							MaxURLcontentSize:      5000000,
-							MaxUploadFileSize:      10000000000,
+							ID:       1,
+							RoleName: "user",
+							IsAdmin:  false,
 						},
 						{
-							ID:                     2,
-							RoleName:               "admin",
-							IsAdmin:                true,
-							CreateNamespaces:       true,
-							AccesForeignNamespaces: 3,
-							MaxURLcontentSize:      -1,
-							MaxUploadFileSize:      10000000,
+							ID:       2,
+							RoleName: "admin",
+							IsAdmin:  true,
 						},
 					},
 				},
 			},
 			Webserver: webserverConf{
 				Profiling: false,
-				UserAgentsRawfile: []string{
-					"curl",
-					"wget",
-					"telegrambot",
-				},
-				MaxPreviewFilesize:   50000,
-				HTMLFiles:            "./html",
-				MaxRequestBodyLength: 100000,
-				MaxUploadFileLength:  10000000000,
-				MaxHeaderLength:      8000,
-				DownloadFileBuffer:   100000,
 				HTTP: configHTTPstruct{
 					Enabled:       true,
 					ListenAddress: ":80",
@@ -223,57 +191,13 @@ func (config *Config) Check() bool {
 		return false
 	}
 
-	//Check file exists file storage dir
-	if !DirExists(config.Server.PathConfig.FileStore) {
-		err := os.Mkdir(config.Server.PathConfig.FileStore, 0700)
-		if err != nil {
-			log.Fatal(err)
-			return false
-		}
-		log.Infof("Filestorage path '%s' created", config.Server.PathConfig.FileStore)
-	}
-
 	//Check default role
 	if config.GetDefaultRole() == nil {
 		log.Fatalln("Can't find default role. You need to specify the ID of the role to use as default")
 		return false
 	}
 
-	// Check if role can upload more than servers max filesize
-	for _, role := range config.Server.Roles.Roles {
-		if role.MaxUploadFileSize > config.Webserver.MaxUploadFileLength {
-			log.Fatalln("Role has bigger uploadfilesize than server will allow")
-			return false
-		}
-	}
-
 	return true
-}
-
-//IsRawUseragent return true if file should be raw depending on useragent
-func (config Config) IsRawUseragent(agent string) bool {
-	agent = strings.ToLower(agent)
-	return gaw.IsInStringArrayContains(agent, config.Webserver.UserAgentsRawfile)
-}
-
-//GetStorageFile return the path and file for an uploaded file
-func (config Config) GetStorageFile(fileName string) string {
-	return path.Join(config.Server.PathConfig.FileStore, fileName)
-}
-
-//GetHTMLFile return path of html file
-func (config Config) GetHTMLFile(fileName string) string {
-	return path.Join(config.Webserver.HTMLFiles, fileName)
-}
-
-//GetStaticFile return path of html file
-func (config Config) GetStaticFile(fileName string) string {
-	return path.Join(config.Webserver.HTMLFiles, "static", fileName)
-}
-
-//GetTemplateFile return path of html file
-func (config Config) GetTemplateFile(fileName string) string {
-	return path.Join(config.Webserver.HTMLFiles, "templates", fileName)
 }
 
 //GetDefaultRole return the path and file for an uploaded file
