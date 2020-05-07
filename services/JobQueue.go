@@ -3,6 +3,7 @@ package services
 import (
 	"sort"
 	"sync"
+	"time"
 
 	"github.com/JojiiOfficial/Remotebuild/models"
 	"github.com/jinzhu/gorm"
@@ -17,7 +18,7 @@ type JobQueue struct {
 
 	mx sync.RWMutex
 
-	tick chan bool
+	tick chan uint
 }
 
 // NewJobQueue create a new JobQueue
@@ -26,13 +27,13 @@ func NewJobQueue(db *gorm.DB) *JobQueue {
 		db: db,
 	}
 
+	queue.tick = make(chan uint, 1)
+
 	// Load Queue
 	err := queue.Load()
 	if err != nil {
 		log.Fatalln(err)
 	}
-
-	queue.tick = make(chan bool)
 
 	return queue
 }
@@ -64,16 +65,19 @@ func (jq *JobQueue) Load() error {
 
 		// Ignore cancelled/failed/finished jobs
 		if jobState == models.JobRunning || jobState == models.JobWaiting {
-			go func() {
-				jq.tick <- true
-			}()
 
 			jobsToUse = append(jobsToUse, jobs[i])
 		}
 	}
 
+	jq.mx.Lock()
+	defer jq.mx.Unlock()
+
+	numJobs := uint(len(jobsToUse))
+
+	jq.tick <- numJobs
 	jq.jobs = jobsToUse
-	log.Infof("Loaded %d Jobs from old queue", len(jobsToUse))
+	log.Infof("Loaded %d Jobs from old queue", numJobs)
 	return nil
 }
 
@@ -101,9 +105,8 @@ func (jq *JobQueue) AddJob(job *models.Job) (*JobQueueItem, error) {
 
 	jq.jobs = append(jq.jobs, *item)
 
-	go func() {
-		jq.tick <- true
-	}()
+	i := <-jq.tick
+	jq.tick <- i + 1
 
 	log.Debugf("Job %d added", item.ID)
 	return item, nil
@@ -142,23 +145,44 @@ func (jq *JobQueue) run(jqi *JobQueueItem) {
 	// state it exited
 	jqi.Done = true
 
-	// Remove Job from queue
-	jq.removeItem(jqi)
-
 	// Update DB
 	if err := jq.db.Save(&jqi).Error; err != nil {
 		log.Warn(err)
 	}
+
+	// Remove Job from queue
+	jq.RemoveJob(jqi)
+}
+
+func (jq *JobQueue) sortPosition() {
+	sort.Sort(SortByPosition(jq.jobs))
 }
 
 func (jq *JobQueue) nextJob() *JobQueueItem {
-	<-jq.tick
-	sort.Sort(SortByPosition(jq.jobs))
+	i := <-jq.tick
+	jq.mx.Lock()
+	jq.tick <- i
+	jq.mx.Unlock()
+
+	for i == 0 || len(jq.jobs) == 0 {
+		time.Sleep(1 * time.Second)
+		i = <-jq.tick
+
+		jq.mx.Lock()
+		if len(jq.jobs) == 0 {
+			jq.tick <- 0
+		} else {
+			jq.tick <- i
+		}
+		jq.mx.Unlock()
+	}
+
+	jq.sortPosition()
 	return &jq.jobs[0]
 }
 
-// Remove item from jobQueue
-func (jq *JobQueue) removeItem(item *JobQueueItem) {
+// RemoveJob remove item from jobQueue
+func (jq *JobQueue) RemoveJob(item *JobQueueItem) {
 	i := -1
 
 	// Find job in Queue slice
@@ -177,4 +201,17 @@ func (jq *JobQueue) removeItem(item *JobQueueItem) {
 	// Remove
 	jq.jobs[len(jq.jobs)-1], jq.jobs[i] = jq.jobs[i], jq.jobs[len(jq.jobs)-1]
 	jq.jobs = jq.jobs[:len(jq.jobs)-1]
+}
+
+// GetJobQueuePos position of job in the queue
+func (jq *JobQueue) GetJobQueuePos(jiq *JobQueueItem) int {
+	jq.sortPosition()
+
+	for i := range jq.jobs {
+		if jq.jobs[i].ID == jiq.ID {
+			return i
+		}
+	}
+
+	return -1
 }

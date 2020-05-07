@@ -59,6 +59,7 @@ func addJob(handlerData HandlerData, w http.ResponseWriter, r *http.Request) {
 	}
 
 	sendResponse(w, models.ResponseSuccess, "", libremotebuild.AddJobResponse{
-		ID: jqi.ID,
+		ID:       jqi.ID,
+		Position: handlerData.JobService.Queue.GetJobQueuePos(jqi),
 	})
 }
