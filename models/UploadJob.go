@@ -32,6 +32,7 @@ const (
 // NewUploadJob create new upload job
 func NewUploadJob(db *gorm.DB, uploadJob UploadJob) (*UploadJob, error) {
 	uploadJob.State = JobWaiting
+	uploadJob.cancel = make(chan bool, 1)
 
 	// Save Job into DB
 	err := db.Create(&uploadJob).Error
@@ -47,7 +48,7 @@ func (uploadJob *UploadJob) Run() *UploadJobResult {
 	log.Debug("Run UploadJob ", uploadJob.ID)
 
 	// TODO upload the binary
-	time.Sleep(1 * time.Second)
+	time.Sleep(8 * time.Second)
 
 	uploadJob.State = JobDone
 	return &UploadJobResult{

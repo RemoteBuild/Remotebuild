@@ -103,13 +103,13 @@ func NewJob(db *gorm.DB, buildJob BuildJob, uploadJob UploadJob) (*Job, error) {
 }
 
 // Cancel Job
-func (job *Job) Cancel() error {
+func (job *Job) Cancel() {
 	job.BuildJob.State = JobCancelled
 	job.UploadJob.State = JobCancelled
 	job.Result = "Cancelled"
 
-	// TODO
-	return nil
+	job.BuildJob.cancel <- true
+	job.UploadJob.cancel <- true
 }
 
 // GetState get state of a job

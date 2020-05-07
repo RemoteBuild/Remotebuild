@@ -29,6 +29,7 @@ type BuildResult struct {
 // NewBuildJob create new BuildJob
 func NewBuildJob(db *gorm.DB, buildJob BuildJob) (*BuildJob, error) {
 	buildJob.State = JobWaiting
+	buildJob.cancel = make(chan bool, 1)
 
 	// Save Job to Db
 	err := db.Create(&buildJob).Error
@@ -42,8 +43,9 @@ func NewBuildJob(db *gorm.DB, buildJob BuildJob) (*BuildJob, error) {
 // Run a buildjob (start but await)
 func (buildJob *BuildJob) Run() *BuildResult {
 	log.Debug("Run BuildJob ", buildJob.ID)
+
 	// TODO implement run job
-	time.Sleep(2 * time.Second)
+	time.Sleep(5 * time.Second)
 
 	buildJob.State = JobDone
 	return &BuildResult{
