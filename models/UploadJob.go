@@ -38,7 +38,7 @@ func NewUploadJob(db *gorm.DB, uploadJob UploadJob) (*UploadJob, error) {
 }
 
 // Run an upload job
-func (uploadJob *UploadJob) Run() *UploadJobResult {
+func (uploadJob *UploadJob) Run(buildResult BuildResult, args map[string]string) *UploadJobResult {
 	log.Debug("Run UploadJob ", uploadJob.ID)
 	uploadJob.State = libremotebuild.JobRunning
 
@@ -47,7 +47,7 @@ func (uploadJob *UploadJob) Run() *UploadJobResult {
 
 	// Do Upload in goroutine
 	go func() {
-		result = uploadJob.upload()
+		result = uploadJob.upload(buildResult)
 		uploadDone <- true
 	}()
 
@@ -63,7 +63,7 @@ func (uploadJob *UploadJob) Run() *UploadJobResult {
 	}
 }
 
-func (uploadJob *UploadJob) upload() *UploadJobResult {
+func (uploadJob *UploadJob) upload(buildResult BuildResult) *UploadJobResult {
 	// TODO upload the binary
 	time.Sleep(8 * time.Second)
 

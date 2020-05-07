@@ -1,8 +1,6 @@
 package models
 
 import (
-	"fmt"
-
 	libremotebuild "github.com/JojiiOfficial/LibRemotebuild"
 	docker "github.com/fsouza/go-dockerclient"
 	"github.com/jinzhu/gorm"
@@ -47,8 +45,27 @@ func NewBuildJob(db *gorm.DB, buildJob BuildJob) (*BuildJob, error) {
 	return &buildJob, nil
 }
 
+// Init buildJob
+func (buildJob *BuildJob) Init() error {
+	// Init channel
+	if buildJob.cancel == nil {
+		buildJob.cancel = make(chan bool, 1)
+	}
+
+	// Connect to docker
+	return buildJob.connectDocker()
+}
+
 // Run a buildjob (start but await)
 func (buildJob *BuildJob) Run(dataDir string, args map[string]string) *BuildResult {
+	// Init buildJob
+	if err := buildJob.Init(); err != nil {
+		buildJob.State = libremotebuild.JobFailed
+		return &BuildResult{
+			Error: err,
+		}
+	}
+
 	log.Debug("Run BuildJob ", buildJob.ID)
 	buildJob.State = libremotebuild.JobRunning
 
@@ -68,7 +85,7 @@ func (buildJob *BuildJob) Run(dataDir string, args map[string]string) *BuildResu
 		return result
 	case <-buildJob.cancel:
 		// On cancel
-		fmt.Println("cancel received")
+		buildJob.Stop()
 		buildJob.State = libremotebuild.JobCancelled
 		return &BuildResult{
 			Error: ErrorJobCancelled,
@@ -78,24 +95,18 @@ func (buildJob *BuildJob) Run(dataDir string, args map[string]string) *BuildResu
 
 // Connect to dockerClient
 func (buildJob *BuildJob) connectDocker() error {
+	// Skip if already connected
 	if buildJob.Client != nil {
 		return nil
 	}
 
+	// Connect
 	var err error
 	buildJob.Client, err = docker.NewClientFromEnv()
 	return err
 }
 
 func (buildJob *BuildJob) build(dataDir string, args map[string]string) *BuildResult {
-	// Connect to docker if not already done
-	if err := buildJob.connectDocker(); err != nil {
-		buildJob.State = libremotebuild.JobFailed
-		return &BuildResult{
-			Error: err,
-		}
-	}
-
 	// Pull image if neccessary
 	if err := buildJob.pullImageIfNeeded(buildJob.Image); err != nil {
 		buildJob.State = libremotebuild.JobFailed
@@ -196,6 +207,7 @@ func (buildJob *BuildJob) hasImage(image string) (bool, error) {
 }
 
 func (buildJob *BuildJob) pullImageIfNeeded(image string) error {
+	// Check if image is present
 	hasImage, err := buildJob.hasImage(image)
 	if err != nil || hasImage {
 		return err
@@ -204,10 +216,24 @@ func (buildJob *BuildJob) pullImageIfNeeded(image string) error {
 	log.Debug("Pulling Image ", image)
 
 	// Pull image
-	return buildJob.PullImage(docker.PullImageOptions{
+	err = buildJob.PullImage(docker.PullImageOptions{
 		Registry:   "docker.io",
 		Repository: image,
 	}, docker.AuthConfiguration{
 		ServerAddress: "docker.io",
 	})
+
+	if err == nil {
+		log.Debug("Successful pulled Image ", image)
+	}
+
+	return err
+}
+
+// Stop building
+func (buildJob *BuildJob) Stop() {
+	if len(buildJob.containerID) > 0 && buildJob.Client != nil {
+		log.Info("Stopping container ", buildJob.containerID)
+		buildJob.StopContainer(buildJob.containerID, 1)
+	}
 }

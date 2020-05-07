@@ -108,7 +108,7 @@ func cancelJob(handlerData HandlerData, w http.ResponseWriter, r *http.Request) 
 
 	// Update state to cancelled
 	if job != nil {
-		handlerData.JobService.Queue.CurrentJob.Job.Cancel()
+		job.Job.Cancel()
 		err := handlerData.Db.Save(job).Error
 		if err != nil {
 			log.Info(err)

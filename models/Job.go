@@ -84,11 +84,8 @@ func (job *Job) putArgs() error {
 func (job *Job) Cancel() {
 	job.Cancelled = true
 
-	// FIXME
 	go func() {
 		job.BuildJob.cancel <- true
-	}()
-	go func() {
 		job.UploadJob.cancel <- true
 	}()
 
@@ -127,8 +124,6 @@ func (job *Job) cleanup() {
 	if err != nil {
 		log.Warn(err)
 	}
-
-	// TODO
 }
 
 // Run a job
@@ -137,7 +132,6 @@ func (job *Job) Run() error {
 		log.Warn("Job is nil")
 		return nil
 	}
-
 	log.Debug("Run job ", job.ID)
 
 	// Cleanup data at the end
@@ -148,7 +142,7 @@ func (job *Job) Run() error {
 	if buildResult.Error != nil {
 		if buildResult.Error != ErrorJobCancelled {
 			job.BuildJob.State = libremotebuild.JobFailed
-			log.Info("Build Failed:", buildResult.Error.Error())
+			log.Info("Build Failed: ", buildResult.Error.Error())
 		}
 
 		return buildResult.Error
@@ -159,11 +153,11 @@ func (job *Job) Run() error {
 	}
 
 	// Run upload
-	uploadResult := job.UploadJob.Run()
+	uploadResult := job.UploadJob.Run(*buildResult, job.Args)
 	if uploadResult.Error != nil {
-		if buildResult.Error != ErrorJobCancelled {
+		if uploadResult.Error != ErrorJobCancelled {
 			job.UploadJob.State = libremotebuild.JobFailed
-			log.Info("Upload Failed:", uploadResult.Error.Error())
+			log.Info("Upload Failed: ", uploadResult.Error.Error())
 		}
 		return uploadResult.Error
 	}

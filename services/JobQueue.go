@@ -14,10 +14,9 @@ import (
 
 // JobQueue a queue for jobs
 type JobQueue struct {
-	db         *gorm.DB
-	jobs       []JobQueueItem
-	mx         sync.RWMutex
-	CurrentJob *JobQueueItem
+	db   *gorm.DB
+	jobs []JobQueueItem
+	mx   sync.RWMutex
 }
 
 // NewJobQueue create a new JobQueue
@@ -117,9 +116,7 @@ func (jq *JobQueue) Run() {
 
 	for {
 		job := jq.nextJob()
-		jq.CurrentJob = job
 		jq.run(job)
-		jq.CurrentJob = nil
 	}
 }
 
@@ -148,7 +145,11 @@ func (jq *JobQueue) run(jqi *JobQueueItem) {
 
 	// Run job and log errors
 	if err := jqi.Job.Run(); err != nil {
-		log.Warn("Job exited with error:", err)
+		if err != models.ErrorJobCancelled {
+			log.Warn("Job exited with error: ", err)
+		} else {
+			log.Info("Job cancelled successfully")
+		}
 	}
 }
 
