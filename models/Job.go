@@ -30,8 +30,9 @@ type JobState uint8
 // ...
 const (
 	JobWaiting JobState = iota
-	JobRunning
 	JobCancelled
+	JobFailed
+	JobRunning
 	JobDone
 )
 
@@ -130,4 +131,28 @@ func (job *Job) cleanup() {
 		log.Warn(err)
 	}
 
+}
+
+// Run a job
+func (job *Job) Run() error {
+	// Cleanup data at the end
+	defer job.cleanup()
+
+	// Run Build
+	buildResult := job.BuildJob.Run()
+	if buildResult.Error != nil {
+		job.BuildJob.State = JobFailed
+		log.Info("Build Failed:", buildResult.Error.Error())
+		return buildResult.Error
+	}
+
+	// Run upload
+	uploadResult := job.UploadJob.Run()
+	if uploadResult.Error != nil {
+		job.UploadJob.State = JobFailed
+		log.Info("Upload Failed:", uploadResult.Error.Error())
+		return uploadResult.Error
+	}
+
+	return nil
 }

@@ -10,6 +10,11 @@ type UploadJob struct {
 	State JobState // Upload state
 }
 
+// UploadJobResult result of uploading a binary
+type UploadJobResult struct {
+	Error error
+}
+
 // UploadJobType type of uploadJob
 type UploadJobType uint8
 
@@ -30,4 +35,12 @@ func NewUploadJob(db *gorm.DB, uploadJob UploadJob) (*UploadJob, error) {
 	}
 
 	return &uploadJob, nil
+}
+
+// Run an upload job
+func (uploadJob *UploadJob) Run() *UploadJobResult {
+	// TODO upload the binary
+
+	uploadJob.State = JobDone
+	return nil
 }

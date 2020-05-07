@@ -16,8 +16,6 @@
 main
 data
 *.json
-DataShareServer
 data/
-manager
 files
 .idea

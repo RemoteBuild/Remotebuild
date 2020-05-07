@@ -2,14 +2,12 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
 	"github.com/JojiiOfficial/Remotebuild/handlers"
-	"github.com/JojiiOfficial/Remotebuild/models"
 	"github.com/JojiiOfficial/Remotebuild/services"
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
@@ -39,13 +37,6 @@ func startAPI() {
 
 	cleanupService = services.NewClienupService(config, db)
 	cleanupService.Start()
-
-	job, err := models.NewJob(db, models.BuildJob{}, models.UploadJob{})
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	jobService.Queue.AddJob(job)
 
 	// Startup done
 	log.Info("Startup completed")

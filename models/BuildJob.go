@@ -13,6 +13,12 @@ type BuildJob struct {
 	Argdata string            `grom:"type:jsonb"`
 }
 
+// BuildResult result of a bulid
+type BuildResult struct {
+	NewBinary string
+	Error     error
+}
+
 // NewBuildJob create new BuildJob
 func NewBuildJob(db *gorm.DB, buildJob BuildJob) (*BuildJob, error) {
 	buildJob.State = JobWaiting
@@ -32,6 +38,9 @@ func (buildJob *BuildJob) Start() {
 }
 
 // Run a buildjob (start but await)
-func (buildJob *BuildJob) Run() {
+func (buildJob *BuildJob) Run() *BuildResult {
+	// TODO implement run job
 
+	buildJob.State = JobDone
+	return nil
 }
