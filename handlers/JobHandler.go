@@ -63,3 +63,28 @@ func addJob(handlerData HandlerData, w http.ResponseWriter, r *http.Request) {
 		Position: handlerData.JobService.Queue.GetJobQueuePos(jqi),
 	})
 }
+
+// listJobs view the queue
+func listJobs(handlerData HandlerData, w http.ResponseWriter, r *http.Request) {
+	jobs := handlerData.JobService.Queue.GetJobs()
+	jobInfos := make([]libremotebuild.JobInfo, len(jobs))
+
+	// Bulid JobInfos
+	for i, jobQueueItem := range jobs {
+		jobQueueItem.Reload(handlerData.Db)
+		job := jobQueueItem.Job
+
+		jobInfos[i] = libremotebuild.JobInfo{
+			ID:         job.ID,
+			BuildType:  job.BuildJob.Type,
+			Position:   jobQueueItem.Position,
+			Status:     job.GetState(),
+			UploadType: job.UploadJob.Type,
+		}
+	}
+
+	// Send list
+	sendResponse(w, models.ResponseSuccess, "", libremotebuild.ListJobsResponse{
+		Jobs: jobInfos,
+	})
+}

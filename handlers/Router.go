@@ -81,10 +81,17 @@ var (
 
 		// Job
 		Route{
-			Name:        "AddJob",
+			Name:        "Add Job",
 			Pattern:     libremotebuild.EPJobAdd,
 			Method:      PUTMethod,
 			HandlerFunc: addJob,
+			HandlerType: sessionRequest,
+		},
+		Route{
+			Name:        "List jobs",
+			Pattern:     libremotebuild.EPJobs,
+			Method:      GetMethod,
+			HandlerFunc: listJobs,
 			HandlerType: sessionRequest,
 		},
 	}

@@ -11,7 +11,7 @@ import (
 // UploadJob a job which uploads a built package
 type UploadJob struct {
 	gorm.Model
-	State JobState // Upload state
+	State libremotebuild.JobState // Upload state
 
 	Type libremotebuild.UploadType
 
@@ -25,7 +25,7 @@ type UploadJobResult struct {
 
 // NewUploadJob create new upload job
 func NewUploadJob(db *gorm.DB, uploadJob UploadJob) (*UploadJob, error) {
-	uploadJob.State = JobWaiting
+	uploadJob.State = libremotebuild.JobWaiting
 	uploadJob.cancel = make(chan bool, 1)
 
 	// Save Job into DB
@@ -44,7 +44,7 @@ func (uploadJob *UploadJob) Run() *UploadJobResult {
 	// TODO upload the binary
 	time.Sleep(8 * time.Second)
 
-	uploadJob.State = JobDone
+	uploadJob.State = libremotebuild.JobDone
 	return &UploadJobResult{
 		Error: nil,
 	}

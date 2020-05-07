@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	libremotebuild "github.com/JojiiOfficial/LibRemotebuild"
 	"github.com/JojiiOfficial/Remotebuild/models"
 	"github.com/jinzhu/gorm"
 	log "github.com/sirupsen/logrus"
@@ -12,12 +13,9 @@ import (
 
 // JobQueue a queue for jobs
 type JobQueue struct {
-	db *gorm.DB
-
+	db   *gorm.DB
 	jobs []JobQueueItem
-
-	mx sync.RWMutex
-
+	mx   sync.RWMutex
 	tick chan uint
 }
 
@@ -58,13 +56,13 @@ func (jq *JobQueue) Load() error {
 		jobState := jobs[i].Job.GetState()
 
 		// Set running jobs to waiting
-		if jobState == models.JobRunning {
-			jobState = models.JobWaiting
-			jobs[i].Job.SetState(models.JobWaiting)
+		if jobState == libremotebuild.JobRunning {
+			jobState = libremotebuild.JobWaiting
+			jobs[i].Job.SetState(libremotebuild.JobWaiting)
 		}
 
 		// Ignore cancelled/failed/finished jobs
-		if jobState == models.JobRunning || jobState == models.JobWaiting {
+		if jobState == libremotebuild.JobRunning || jobState == libremotebuild.JobWaiting {
 
 			jobsToUse = append(jobsToUse, jobs[i])
 		}
@@ -150,6 +148,11 @@ func (jq *JobQueue) run(jqi *JobQueueItem) {
 		log.Warn(err)
 	}
 
+	// Delete jqi
+	if err := jq.db.Delete(&jqi).Error; err != nil {
+		log.Warn(err)
+	}
+
 	// Remove Job from queue
 	jq.RemoveJob(jqi)
 }
@@ -214,4 +217,10 @@ func (jq *JobQueue) GetJobQueuePos(jiq *JobQueueItem) int {
 	}
 
 	return -1
+}
+
+// GetJobs return jobs in queue
+func (jq *JobQueue) GetJobs() []JobQueueItem {
+	jq.sortPosition()
+	return jq.jobs
 }

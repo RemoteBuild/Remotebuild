@@ -4,7 +4,7 @@ go 1.14
 
 
 require (
-	github.com/JojiiOfficial/LibRemotebuild v0.0.1
+	github.com/JojiiOfficial/LibRemotebuild v0.0.2
 	github.com/JojiiOfficial/configService v0.0.0-20200219132202-6e71512e2e28
 	github.com/JojiiOfficial/gaw v1.2.1
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect

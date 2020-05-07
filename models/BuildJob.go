@@ -12,8 +12,8 @@ import (
 // BuildJob a job which builds a package
 type BuildJob struct {
 	gorm.Model
-	State JobState               // Build state
-	Type  libremotebuild.JobType // Type of job
+	State libremotebuild.JobState // Build state
+	Type  libremotebuild.JobType  // Type of job
 
 	Image   string            // Dockerimage to run
 	Args    map[string]string `gorm:"-"` // Envars for Dockerimage
@@ -30,7 +30,7 @@ type BuildResult struct {
 
 // NewBuildJob create new BuildJob
 func NewBuildJob(db *gorm.DB, buildJob BuildJob) (*BuildJob, error) {
-	buildJob.State = JobWaiting
+	buildJob.State = libremotebuild.JobWaiting
 	buildJob.cancel = make(chan bool, 1)
 
 	buildJob.putArgs()
@@ -63,7 +63,7 @@ func (buildJob *BuildJob) Run() *BuildResult {
 	// TODO implement run job
 	time.Sleep(5 * time.Second)
 
-	buildJob.State = JobDone
+	buildJob.State = libremotebuild.JobDone
 	return &BuildResult{
 		Error: nil,
 	}
