@@ -1,6 +1,9 @@
 package services
 
 import (
+	"fmt"
+	"time"
+
 	"github.com/JojiiOfficial/Remotebuild/models"
 	"github.com/jinzhu/gorm"
 )
@@ -15,6 +18,8 @@ type JobQueueItem struct {
 	Position uint // The position in the Queue
 
 	Done bool // Wether the Job is already done or not
+
+	RunningSince time.Time `gorm:"-"`
 }
 
 // SortByPosition sort by JobQueueItem position
@@ -31,9 +36,25 @@ func (jqi JobQueueItem) TableName() string {
 
 // Reload (re)load the item from Db
 func (jqi *JobQueueItem) Reload(db *gorm.DB) error {
-	return db.Model(&JobQueueItem{}).
+	var queueItem JobQueueItem
+	err := db.Model(&JobQueueItem{}).
 		Preload("Job").
 		Preload("Job.BuildJob").
 		Preload("Job.UploadJob").
-		Where("id=?", jqi.ID).First(jqi).Error
+		Where("id=?", jqi.ID).First(&queueItem).Error
+
+	if err != nil {
+		fmt.Println("aa")
+		return err
+	}
+
+	if jqi.Job.BuildJob == nil {
+		jqi.Job.BuildJob = queueItem.Job.BuildJob
+	}
+
+	if jqi.Job.UploadJob == nil {
+		jqi.Job.UploadJob = queueItem.Job.UploadJob
+	}
+
+	return nil
 }

@@ -40,6 +40,7 @@ func NewUploadJob(db *gorm.DB, uploadJob UploadJob) (*UploadJob, error) {
 // Run an upload job
 func (uploadJob *UploadJob) Run() *UploadJobResult {
 	log.Debug("Run UploadJob ", uploadJob.ID)
+	uploadJob.State = libremotebuild.JobRunning
 
 	// TODO upload the binary
 	time.Sleep(8 * time.Second)

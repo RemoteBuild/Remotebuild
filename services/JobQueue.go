@@ -83,6 +83,7 @@ func (jq *JobQueue) Load() error {
 func (jq *JobQueue) AddJob(job *models.Job) (*JobQueueItem, error) {
 	item := &JobQueueItem{
 		JobID: job.ID,
+		Job:   job,
 	}
 
 	// Insert Item
@@ -127,6 +128,24 @@ func (jq *JobQueue) Run() {
 
 // Run a QueueItem
 func (jq *JobQueue) run(jqi *JobQueueItem) {
+	// Job is done after run, whatever
+	// state it exited
+	defer func() {
+		jqi.Done = true
+
+		// Update DB
+		if err := jq.db.Save(&jqi).Error; err != nil {
+			log.Warn(err)
+		}
+
+		// Delete jqi
+		if err := jq.db.Delete(&jqi).Error; err != nil {
+			log.Warn(err)
+		}
+
+		jq.RemoveJob(jqi)
+	}()
+
 	// Get Job
 	err := jqi.Reload(jq.db)
 	if err != nil {
@@ -134,27 +153,12 @@ func (jq *JobQueue) run(jqi *JobQueueItem) {
 		return
 	}
 
+	jqi.RunningSince = time.Now()
+
 	// Run job and log errors
 	if err := jqi.Job.Run(); err != nil {
 		log.Warn("Job exited with error:", err)
 	}
-
-	// Job is done after run, whatever
-	// state it exited
-	jqi.Done = true
-
-	// Update DB
-	if err := jq.db.Save(&jqi).Error; err != nil {
-		log.Warn(err)
-	}
-
-	// Delete jqi
-	if err := jq.db.Delete(&jqi).Error; err != nil {
-		log.Warn(err)
-	}
-
-	// Remove Job from queue
-	jq.RemoveJob(jqi)
 }
 
 func (jq *JobQueue) sortPosition() {

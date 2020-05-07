@@ -81,6 +81,10 @@ func listJobs(handlerData HandlerData, w http.ResponseWriter, r *http.Request) {
 			Status:     job.GetState(),
 			UploadType: job.UploadJob.Type,
 		}
+
+		if job.GetState() == libremotebuild.JobRunning {
+			jobInfos[i].RunningSince = jobQueueItem.RunningSince
+		}
 	}
 
 	// Send list

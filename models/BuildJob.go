@@ -59,6 +59,7 @@ func (buildJob *BuildJob) putArgs() error {
 // Run a buildjob (start but await)
 func (buildJob *BuildJob) Run() *BuildResult {
 	log.Debug("Run BuildJob ", buildJob.ID)
+	buildJob.State = libremotebuild.JobRunning
 
 	// TODO implement run job
 	time.Sleep(5 * time.Second)
