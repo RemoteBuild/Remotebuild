@@ -112,14 +112,14 @@ func (jq *JobQueue) Run() {
 // Run a QueueItem
 func (jq *JobQueue) run(jqi *JobQueueItem) {
 	// Get Job
-	job, err := jqi.GetJob(jq.db)
+	err := jqi.Reload(jq.db)
 	if err != nil {
 		log.Error(err)
 		return
 	}
 
 	// Run job and log errors
-	if err := job.Run(); err != nil {
+	if err := jqi.Job.Run(); err != nil {
 		log.Warn("Job exited with error:", err)
 	}
 

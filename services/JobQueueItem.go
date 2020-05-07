@@ -29,16 +29,11 @@ func (jqi JobQueueItem) TableName() string {
 	return "job_queue"
 }
 
-// GetJob returns job for JobQueueitem
-func (jqi *JobQueueItem) GetJob(db *gorm.DB) (*models.Job, error) {
-	var job JobQueueItem
-
-	err := db.Model(&JobQueueItem{}).
+// Reload (re)load the item from Db
+func (jqi *JobQueueItem) Reload(db *gorm.DB) error {
+	return db.Model(&JobQueueItem{}).
 		Preload("Job").
 		Preload("Job.BuildJob").
 		Preload("Job.UploadJob").
-		Where("id=?", jqi.ID).First(&job).Error
-
-	jqi.Job = job.Job
-	return job.Job, err
+		Where("id=?", jqi.ID).First(jqi).Error
 }

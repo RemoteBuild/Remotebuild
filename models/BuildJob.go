@@ -16,6 +16,8 @@ type BuildJob struct {
 	Image   string            // Dockerimage to run
 	Args    map[string]string `gorm:"-"` // Envars for Dockerimage
 	Argdata string            `grom:"type:jsonb"`
+
+	cancel chan bool `gorm:"-"` // Cancel chan
 }
 
 // BuildResult result of a bulid

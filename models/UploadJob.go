@@ -11,6 +11,8 @@ import (
 type UploadJob struct {
 	gorm.Model
 	State JobState // Upload state
+
+	cancel chan bool `gorm:"-"` // Cancel chan
 }
 
 // UploadJobResult result of uploading a binary
