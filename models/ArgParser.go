@@ -74,7 +74,7 @@ func (argParser *ArgParser) GetDManagerData() *DataManagerArgs {
 
 	host := argParser.args[libremotebuild.DMHost]
 	username := argParser.args[libremotebuild.DMUser]
-	token := argParser.args[libremotebuild.DMUser]
+	token := argParser.args[libremotebuild.DMToken]
 
 	return &DataManagerArgs{
 		Host:     host,

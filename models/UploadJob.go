@@ -2,6 +2,8 @@ package models
 
 import (
 	"errors"
+	"os"
+	"path/filepath"
 
 	"github.com/DataManager-Go/libdatamanager"
 	libremotebuild "github.com/JojiiOfficial/LibRemotebuild"
@@ -67,25 +69,7 @@ func (uploadJob *UploadJob) Run(buildResult BuildResult, argParser *ArgParser) *
 		}
 	}
 
-	uploadDone := make(chan bool, 1)
-	var result *UploadJobResult
-
-	// Do Upload
-	go func() {
-		result = uploadJob.upload(buildResult, argParser)
-		uploadDone <- true
-	}()
-
-	// Await upload done or cancel
-	select {
-	case <-uploadDone:
-		// On Upload done
-		return result
-	case <-uploadJob.cancel:
-		// On cancel
-		uploadJob.State = libremotebuild.JobCancelled
-		return &UploadJobResult{Error: ErrorJobCancelled}
-	}
+	return uploadJob.upload(buildResult, argParser)
 }
 
 func (uploadJob *UploadJob) upload(buildResult BuildResult, argParser *ArgParser) *UploadJobResult {
@@ -102,17 +86,48 @@ func (uploadJob *UploadJob) upload(buildResult BuildResult, argParser *ArgParser
 	}
 }
 
+// Upload to datamanager
+// See https://github.com/DataManager-Go/DataManagerServer
 func (uploadJob *UploadJob) uploadDmanager(buildResult BuildResult, argParser *ArgParser) *UploadJobResult {
 	dmanagerData := argParser.GetDManagerData()
 
-	libdm := libdatamanager.NewLibDM(&libdatamanager.RequestConfig{
+	// Decode base64 encoded token
+	unencodedToken, err := base64Decode(dmanagerData.Token)
+	if err != nil {
+		uploadJob.State = libremotebuild.JobFailed
+		return &UploadJobResult{
+			Error: err,
+		}
+	}
+
+	_, filename := filepath.Split(buildResult.Archive)
+
+	// Create uploadrequest
+	uploadRequest := libdatamanager.NewLibDM(&libdatamanager.RequestConfig{
 		URL:          dmanagerData.Host,
 		Username:     dmanagerData.Username,
-		SessionToken: dmanagerData.Token,
+		SessionToken: unencodedToken,
+	}).NewUploadRequest(filename, libdatamanager.FileAttributes{
+		Groups: []string{"AURpackage"},
 	})
 
-	_ = libdm
-	// TODO
+	// Open file
+	f, err := os.Open(buildResult.Archive)
+	if err != nil {
+		uploadJob.State = libremotebuild.JobFailed
+		return &UploadJobResult{
+			Error: err,
+		}
+	}
+
+	// Upload file
+	_, err = uploadRequest.UploadFile(f, nil, uploadJob.cancel)
+	if err != nil {
+		uploadJob.State = libremotebuild.JobFailed
+		return &UploadJobResult{
+			Error: err,
+		}
+	}
 
 	uploadJob.State = libremotebuild.JobDone
 	return nil
