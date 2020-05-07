@@ -116,7 +116,7 @@ func InitConfig(confFile string, createMode bool) (*Config, bool) {
 				AllowRegistration: false,
 				Jobs: jobconfig{
 					Images: map[string]string{
-						JobAUR.String(): "jojii/buildaur:v1.0",
+						JobAUR.String(): "jojii/buildaur:v1.1",
 					},
 				},
 				DeleteUnusedSessionsAfter: 10 * time.Minute,

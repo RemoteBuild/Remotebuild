@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/JojiiOfficial/Remotebuild/handlers"
+	"github.com/JojiiOfficial/Remotebuild/models"
 	"github.com/JojiiOfficial/Remotebuild/services"
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
@@ -37,6 +38,15 @@ func startAPI() {
 
 	cleanupService = services.NewClienupService(config, db)
 	cleanupService.Start()
+
+	job, err := models.NewJob(db, models.BuildJob{
+		Image: config.Server.Jobs.Images[models.JobAUR.String()],
+	}, models.UploadJob{})
+
+	if err != nil {
+		log.Fatalln(err)
+	}
+	jobService.Queue.AddJob(job)
 
 	// Startup done
 	log.Info("Startup completed")

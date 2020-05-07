@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/JojiiOfficial/Remotebuild/models"
+	"github.com/JojiiOfficial/Remotebuild/services"
 	"github.com/jinzhu/gorm"
 	log "github.com/sirupsen/logrus"
 )
@@ -25,6 +26,10 @@ func ConnectToDatabase(config *models.Config) (*gorm.DB, error) {
 		&models.Role{},
 		&models.LoginSession{},
 		&models.User{},
+		&models.BuildJob{},
+		&models.UploadJob{},
+		&models.Job{},
+		&services.JobQueueItem{},
 	).Error
 
 	//Return error if automigration fails
