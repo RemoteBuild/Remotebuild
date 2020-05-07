@@ -117,4 +117,6 @@ func cancelJob(handlerData HandlerData, w http.ResponseWriter, r *http.Request) 
 
 	// Remove from Db
 	handlerData.Db.Where("job_id=?", request.JobID).Delete(&services.JobQueueItem{})
+
+	log.Info("Cancelled Job ", request.JobID)
 }

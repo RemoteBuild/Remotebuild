@@ -24,7 +24,7 @@ func GetUserFromSession(db *gorm.DB, token string) (*User, error) {
 	var session LoginSession
 	err := db.Model(&LoginSession{}).Where(&LoginSession{
 		Token: token,
-	}).Preload("User").Preload("User.Role").Find(&session).Error
+	}).Preload("User").Find(&session).Error
 
 	if err != nil {
 		return nil, err

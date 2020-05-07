@@ -14,8 +14,7 @@ type User struct {
 	gorm.Model
 	Username string
 	Password string
-	RoleID   uint  `sql:"index"`
-	Role     *Role `gorm:"association_autoupdate:false;association_autocreate:false"`
+	RoleID   uint `sql:"index"`
 }
 
 // Login login user
@@ -72,8 +71,6 @@ func (user User) Register(db *gorm.DB, config *Config) error {
 	user = User{
 		Password: gaw.SHA512(user.GetUsername() + user.Password),
 		Username: user.GetUsername(),
-		RoleID:   config.GetDefaultRole().ID,
-		Role:     config.GetDefaultRole(),
 	}
 
 	return db.Create(&user).Error

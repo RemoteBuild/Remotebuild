@@ -32,7 +32,7 @@ type Job struct {
 // NewJob create a new job
 func NewJob(db *gorm.DB, buildJob BuildJob, uploadJob UploadJob, args map[string]string) (*Job, error) {
 	// Create temporary path for storing build data
-	path := filepath.Join(os.TempDir(), "remotebbulid_"+gaw.RandString(30))
+	path := filepath.Join(os.TempDir(), "remotebuild_"+gaw.RandString(30))
 	err := os.MkdirAll(path, 0700)
 	if err != nil {
 		return nil, err
@@ -118,7 +118,6 @@ func (job *Job) GetState() libremotebuild.JobState {
 
 // Cleanup a job
 func (job *Job) cleanup() {
-	log.Debug("cleanup")
 	// Remove Data dir
 	err := os.RemoveAll(job.DataDir)
 	if err != nil {
@@ -137,8 +136,11 @@ func (job *Job) Run() error {
 	// Cleanup data at the end
 	defer job.cleanup()
 
+	// New argParser
+	argParser := NewArgParser(job.Args, job.BuildJob.Type)
+
 	// Run Build
-	buildResult := job.BuildJob.Run(job.DataDir, job.Args)
+	buildResult := job.BuildJob.Run(job.DataDir, argParser)
 	if buildResult.Error != nil {
 		if buildResult.Error != ErrorJobCancelled {
 			job.BuildJob.State = libremotebuild.JobFailed
@@ -153,8 +155,8 @@ func (job *Job) Run() error {
 	}
 
 	// Run upload
-	uploadResult := job.UploadJob.Run(*buildResult, job.Args)
-	if uploadResult.Error != nil {
+	uploadResult := job.UploadJob.Run(*buildResult, argParser)
+	if uploadResult != nil && uploadResult.Error != nil {
 		if uploadResult.Error != ErrorJobCancelled {
 			job.UploadJob.State = libremotebuild.JobFailed
 			log.Info("Upload Failed: ", uploadResult.Error.Error())

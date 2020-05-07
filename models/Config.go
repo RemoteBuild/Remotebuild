@@ -31,7 +31,6 @@ type webserverConf struct {
 
 type configServer struct {
 	Database                  configDBstruct
-	Roles                     roleConfig
 	Jobs                      jobconfig
 	AllowRegistration         bool          `default:"false"`
 	DeleteUnusedSessionsAfter time.Duration `default:"10m"`
@@ -39,11 +38,6 @@ type configServer struct {
 
 type jobconfig struct {
 	Images map[string]string
-}
-
-type roleConfig struct {
-	DefaultRole uint `required:"true"`
-	Roles       []Role
 }
 
 type configDBstruct struct {
@@ -117,25 +111,10 @@ func InitConfig(confFile string, createMode bool) (*Config, bool) {
 				AllowRegistration: false,
 				Jobs: jobconfig{
 					Images: map[string]string{
-						libremotebuild.JobAUR.String(): "jojii/buildaur:v1.1",
+						libremotebuild.JobAUR.String(): "jojii/buildaur:v1.2",
 					},
 				},
 				DeleteUnusedSessionsAfter: 10 * time.Minute,
-				Roles: roleConfig{
-					DefaultRole: 1,
-					Roles: []Role{
-						{
-							ID:       1,
-							RoleName: "user",
-							IsAdmin:  false,
-						},
-						{
-							ID:       2,
-							RoleName: "admin",
-							IsAdmin:  true,
-						},
-					},
-				},
 			},
 			Webserver: webserverConf{
 				HTTP: configHTTPstruct{
@@ -205,24 +184,7 @@ func (config *Config) Check() bool {
 		return false
 	}
 
-	//Check default role
-	if config.GetDefaultRole() == nil {
-		log.Fatalln("Can't find default role. You need to specify the ID of the role to use as default")
-		return false
-	}
-
 	return true
-}
-
-//GetDefaultRole return the path and file for an uploaded file
-func (config Config) GetDefaultRole() *Role {
-	for rI, role := range config.Server.Roles.Roles {
-		if role.ID == config.Server.Roles.DefaultRole {
-			return &config.Server.Roles.Roles[rI]
-		}
-	}
-
-	return nil
 }
 
 // DirExists return true if dir exists

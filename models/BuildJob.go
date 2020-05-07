@@ -1,6 +1,10 @@
 package models
 
 import (
+	"io/ioutil"
+	"path/filepath"
+	"strings"
+
 	libremotebuild "github.com/JojiiOfficial/LibRemotebuild"
 	docker "github.com/fsouza/go-dockerclient"
 	"github.com/jinzhu/gorm"
@@ -22,8 +26,8 @@ type BuildJob struct {
 
 // BuildResult result of a bulid
 type BuildResult struct {
-	NewBinary string
-	Error     error
+	Archive string
+	Error   error
 }
 
 // NewBuildJob create new BuildJob
@@ -57,7 +61,7 @@ func (buildJob *BuildJob) Init() error {
 }
 
 // Run a buildjob (start but await)
-func (buildJob *BuildJob) Run(dataDir string, args map[string]string) *BuildResult {
+func (buildJob *BuildJob) Run(dataDir string, argParser *ArgParser) *BuildResult {
 	// Init buildJob
 	if err := buildJob.Init(); err != nil {
 		buildJob.State = libremotebuild.JobFailed
@@ -72,9 +76,9 @@ func (buildJob *BuildJob) Run(dataDir string, args map[string]string) *BuildResu
 	buildDone := make(chan bool, 1)
 	var result *BuildResult
 
-	// Run build in goroutine
+	// Run build
 	go func() {
-		result = buildJob.build(dataDir, args)
+		result = buildJob.build(dataDir, argParser)
 		buildDone <- true
 	}()
 
@@ -106,7 +110,16 @@ func (buildJob *BuildJob) connectDocker() error {
 	return err
 }
 
-func (buildJob *BuildJob) build(dataDir string, args map[string]string) *BuildResult {
+func (buildJob *BuildJob) build(dataDir string, argParser *ArgParser) *BuildResult {
+	// Parse args
+	envars, err := argParser.ParseEnvars()
+	if err != nil {
+		buildJob.State = libremotebuild.JobFailed
+		return &BuildResult{
+			Error: err,
+		}
+	}
+
 	// Pull image if neccessary
 	if err := buildJob.pullImageIfNeeded(buildJob.Image); err != nil {
 		buildJob.State = libremotebuild.JobFailed
@@ -116,7 +129,7 @@ func (buildJob *BuildJob) build(dataDir string, args map[string]string) *BuildRe
 	}
 
 	// Create container
-	container, err := buildJob.getContainer(dataDir, args)
+	container, err := buildJob.getContainer(dataDir, envars)
 	if err != nil {
 		buildJob.State = libremotebuild.JobFailed
 		return &BuildResult{
@@ -149,20 +162,70 @@ func (buildJob *BuildJob) build(dataDir string, args map[string]string) *BuildRe
 		}
 	}
 
+	// Get Archive
+	archive := buildJob.getArchive(dataDir, argParser)
+
+	// If not found serach for it
+	if len(archive) == 0 {
+		log.Debug("Archive not found. Searching...")
+
+		archive, err = buildJob.findBuiltPackage(dataDir)
+		if err != nil {
+			buildJob.State = libremotebuild.JobFailed
+			return &BuildResult{
+				Error: err,
+			}
+		}
+	}
+
+	log.Info("archive: ", archive)
+
 	// Set done
 	buildJob.State = libremotebuild.JobDone
 	return &BuildResult{
-		Error: nil,
+		Error:   nil,
+		Archive: archive,
 	}
 }
 
+func (buildJob *BuildJob) getArchive(dir string, argParser *ArgParser) string {
+	var fileName string
+
+	switch buildJob.Type {
+	case libremotebuild.JobAUR:
+		fileName = argParser.getAURRepoName() + ".pkg.tar.xz"
+	}
+
+	if len(fileName) == 0 {
+		return ""
+	}
+
+	return filepath.Join(dir, fileName)
+}
+
+// Return built archive
+func (buildJob *BuildJob) findBuiltPackage(dir string) (string, error) {
+	files, err := ioutil.ReadDir(dir)
+	if err != nil {
+		return "", err
+	}
+
+	for _, fileinfo := range files {
+		if strings.HasSuffix(fileinfo.Name(), "pkg.tar.xz") {
+			return fileinfo.Name(), nil
+		}
+	}
+
+	return "", nil
+}
+
 // Create build container
-func (buildJob *BuildJob) getContainer(dataDir string, args map[string]string) (*docker.Container, error) {
+func (buildJob *BuildJob) getContainer(dataDir string, env []string) (*docker.Container, error) {
 	// Create container
 	container, err := buildJob.CreateContainer(docker.CreateContainerOptions{
 		Config: &docker.Config{
 			Image: buildJob.Image,
-			Env:   argsToEnvs(args),
+			Env:   env,
 		},
 		HostConfig: &docker.HostConfig{
 			// Mount /home/builduser on host /tmp/remotebuild_XXXXXXXXXX
@@ -175,6 +238,7 @@ func (buildJob *BuildJob) getContainer(dataDir string, args map[string]string) (
 				Type:     "bind",
 				Target:   "/home/builduser",
 			}},
+
 			// Autodelete container afterwards
 			AutoRemove: true,
 		},

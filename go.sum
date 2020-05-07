@@ -4,6 +4,8 @@ github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78 h1:w+iIsaOQNcT7O
 github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78/go.mod h1:LmzpDX56iTiv29bbRTIsUNlaFfuhWRQBWjQdVyAevI8=
 github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
+github.com/DataManager-Go/libdatamanager v1.2.4 h1:K5AHX32XPLO4RyU3WrE0tBSYVDAaWWrwuuKBMq5RMVs=
+github.com/DataManager-Go/libdatamanager v1.2.4/go.mod h1:s2ywdIZpWEfgxJ7iMtCOdLCNaHVnO8dr7e9cE2NzgL4=
 github.com/JojiiOfficial/LibRemotebuild v0.0.1 h1:QgSRDQdqVn7HirWUkStg8ZCCaxbsMJfTfCJXwpFC+Lo=
 github.com/JojiiOfficial/LibRemotebuild v0.0.1/go.mod h1:NS5D8NlALafEHK8LmRctE22sM4JjOlZyCwoXA//P2nU=
 github.com/JojiiOfficial/LibRemotebuild v0.0.2 h1:iZ7ozHgtofh6V180kM+/9XbZmAG3IPLch7EODG5d5b8=

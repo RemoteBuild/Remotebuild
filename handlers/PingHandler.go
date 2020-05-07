@@ -7,7 +7,7 @@ import (
 	"github.com/JojiiOfficial/Remotebuild/models"
 )
 
-//Ping handles ping request
+// Ping handles ping request
 func Ping(handlerData HandlerData, w http.ResponseWriter, r *http.Request) {
 	var request libremotebuild.PingRequest
 	if !readRequestLimited(w, r, &request, handlerData.Config.Webserver.MaxRequestBodyLength) {
@@ -24,5 +24,6 @@ func Ping(handlerData HandlerData, w http.ResponseWriter, r *http.Request) {
 	response := models.StringResponse{
 		String: payload,
 	}
+
 	sendResponse(w, models.ResponseSuccess, "", response)
 }
