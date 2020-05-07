@@ -3,12 +3,13 @@ package handlers
 import (
 	"net/http"
 
+	libremotebuild "github.com/JojiiOfficial/LibRemotebuild"
 	"github.com/JojiiOfficial/Remotebuild/models"
 )
 
 //Ping handles ping request
 func Ping(handlerData HandlerData, w http.ResponseWriter, r *http.Request) {
-	var request models.PingRequest
+	var request libremotebuild.PingRequest
 	if !readRequestLimited(w, r, &request, handlerData.Config.Webserver.MaxRequestBodyLength) {
 		return
 	}

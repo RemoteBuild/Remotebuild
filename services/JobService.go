@@ -1,6 +1,7 @@
 package services
 
 import (
+	libremotebuild "github.com/JojiiOfficial/LibRemotebuild"
 	"github.com/JojiiOfficial/Remotebuild/models"
 	"github.com/jinzhu/gorm"
 	log "github.com/sirupsen/logrus"
@@ -43,7 +44,7 @@ func (js *JobService) Run() {
 func (js *JobService) check() bool {
 	success := true
 
-	if len(js.config.Server.Jobs.Images[models.JobAUR.String()]) == 0 {
+	if len(js.config.Server.Jobs.Images[libremotebuild.JobAUR.String()]) == 0 {
 		log.Error("No Image specified for AUR building!")
 		success = false
 	}

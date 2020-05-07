@@ -1,8 +1,10 @@
 package models
 
 import (
+	"encoding/json"
 	"time"
 
+	libremotebuild "github.com/JojiiOfficial/LibRemotebuild"
 	"github.com/jinzhu/gorm"
 	log "github.com/sirupsen/logrus"
 )
@@ -10,8 +12,8 @@ import (
 // BuildJob a job which builds a package
 type BuildJob struct {
 	gorm.Model
-	State JobState // Build state
-	Type  JobType  // Type of job
+	State JobState               // Build state
+	Type  libremotebuild.JobType // Type of job
 
 	Image   string            // Dockerimage to run
 	Args    map[string]string `gorm:"-"` // Envars for Dockerimage
@@ -31,6 +33,8 @@ func NewBuildJob(db *gorm.DB, buildJob BuildJob) (*BuildJob, error) {
 	buildJob.State = JobWaiting
 	buildJob.cancel = make(chan bool, 1)
 
+	buildJob.putArgs()
+
 	// Save Job to Db
 	err := db.Create(&buildJob).Error
 	if err != nil {
@@ -38,6 +42,18 @@ func NewBuildJob(db *gorm.DB, buildJob BuildJob) (*BuildJob, error) {
 	}
 
 	return &buildJob, nil
+}
+
+// Tranlate Args to Argdata
+func (buildJob *BuildJob) putArgs() error {
+	b, err := json.Marshal(buildJob.Args)
+	if err != nil {
+		return err
+	}
+
+	buildJob.Argdata = string(b)
+
+	return nil
 }
 
 // Run a buildjob (start but await)

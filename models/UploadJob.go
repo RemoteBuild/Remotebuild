@@ -3,6 +3,7 @@ package models
 import (
 	"time"
 
+	libremotebuild "github.com/JojiiOfficial/LibRemotebuild"
 	"github.com/jinzhu/gorm"
 	log "github.com/sirupsen/logrus"
 )
@@ -12,6 +13,8 @@ type UploadJob struct {
 	gorm.Model
 	State JobState // Upload state
 
+	Type libremotebuild.UploadType
+
 	cancel chan bool `gorm:"-"` // Cancel chan
 }
 
@@ -19,15 +22,6 @@ type UploadJob struct {
 type UploadJobResult struct {
 	Error error
 }
-
-// UploadJobType type of uploadJob
-type UploadJobType uint8
-
-// ...
-const (
-	NoUploadType UploadJobType = iota
-	DataManagerUploadType
-)
 
 // NewUploadJob create new upload job
 func NewUploadJob(db *gorm.DB, uploadJob UploadJob) (*UploadJob, error) {

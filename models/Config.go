@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	libremotebuild "github.com/JojiiOfficial/LibRemotebuild"
 	"github.com/JojiiOfficial/Remotebuild/constants"
 	"github.com/JojiiOfficial/configService"
 	"github.com/JojiiOfficial/gaw"
@@ -116,7 +117,7 @@ func InitConfig(confFile string, createMode bool) (*Config, bool) {
 				AllowRegistration: false,
 				Jobs: jobconfig{
 					Images: map[string]string{
-						JobAUR.String(): "jojii/buildaur:v1.1",
+						libremotebuild.JobAUR.String(): "jojii/buildaur:v1.1",
 					},
 				},
 				DeleteUnusedSessionsAfter: 10 * time.Minute,
@@ -234,4 +235,10 @@ func DirExists(path string) bool {
 		return false
 	}
 	return false
+}
+
+// GetImage get DockerImage for buildType
+func (config Config) GetImage(buildType libremotebuild.JobType) (string, bool) {
+	v, ok := config.Server.Jobs.Images[buildType.String()]
+	return v, ok
 }

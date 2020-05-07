@@ -5,8 +5,10 @@ import (
 	"net/http"
 	"time"
 
+	libremotebuild "github.com/JojiiOfficial/LibRemotebuild"
 	"github.com/JojiiOfficial/Remotebuild/models"
 	"github.com/JojiiOfficial/Remotebuild/services"
+	docker "github.com/fsouza/go-dockerclient"
 
 	"github.com/JojiiOfficial/gaw"
 	"github.com/jinzhu/gorm"
@@ -19,7 +21,7 @@ import (
 type Route struct {
 	Name        string
 	Method      HTTPMethod
-	Pattern     string
+	Pattern     libremotebuild.Endpoint
 	HandlerFunc RouteFunction
 	HandlerType requestType
 }
@@ -55,42 +57,53 @@ var (
 		// Ping
 		Route{
 			Name:        "ping",
-			Pattern:     "/ping",
+			Pattern:     libremotebuild.EPPing,
 			Method:      POSTMethod,
 			HandlerFunc: Ping,
 			HandlerType: defaultRequest,
 		},
+
 		// User
 		Route{
 			Name:        "login",
-			Pattern:     "/user/login",
+			Pattern:     libremotebuild.EPLogin,
 			Method:      POSTMethod,
 			HandlerFunc: Login,
 			HandlerType: defaultRequest,
 		},
 		Route{
 			Name:        "register",
-			Pattern:     "/user/register",
+			Pattern:     libremotebuild.EPRegister,
 			Method:      POSTMethod,
 			HandlerFunc: Register,
 			HandlerType: defaultRequest,
+		},
+
+		// Job
+		Route{
+			Name:        "AddJob",
+			Pattern:     libremotebuild.EPJobAdd,
+			Method:      PUTMethod,
+			HandlerFunc: addJob,
+			HandlerType: sessionRequest,
 		},
 	}
 )
 
 // NewRouter create new router
-func NewRouter(config *models.Config, db *gorm.DB, jobService *services.JobService) *mux.Router {
+func NewRouter(config *models.Config, db *gorm.DB, jobService *services.JobService, dockerClient *docker.Client) *mux.Router {
 	handlerData := HandlerData{
-		Config:     config,
-		Db:         db,
-		JobService: jobService,
+		Config:       config,
+		Db:           db,
+		JobService:   jobService,
+		DockerClient: dockerClient,
 	}
 
 	router := mux.NewRouter().StrictSlash(true)
 	for _, route := range routes {
 		router.
 			Methods(string(route.Method)).
-			Path(route.Pattern).
+			Path(string(route.Pattern)).
 			Name(route.Name).
 			Handler(RouteHandler(route.HandlerType, &handlerData, route.HandlerFunc, route.Name))
 	}

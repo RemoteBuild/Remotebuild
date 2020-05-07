@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 
+	libremotebuild "github.com/JojiiOfficial/LibRemotebuild"
 	"github.com/JojiiOfficial/Remotebuild/models"
 	"github.com/JojiiOfficial/gaw"
 )
@@ -10,7 +11,7 @@ import (
 //Login login handler
 //-> /user/login
 func Login(handlerData HandlerData, w http.ResponseWriter, r *http.Request) {
-	var request models.CredentialsRequest
+	var request libremotebuild.CredentialsRequest
 
 	if !readRequestLimited(w, r, &request, handlerData.Config.Webserver.MaxRequestBodyLength) {
 		return
@@ -49,7 +50,7 @@ func Register(handlerData HandlerData, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var request models.CredentialsRequest
+	var request libremotebuild.CredentialsRequest
 
 	if !readRequestLimited(w, r, &request, handlerData.Config.Webserver.MaxRequestBodyLength) {
 		return
