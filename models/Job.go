@@ -23,6 +23,8 @@ type Job struct {
 	DataDir string // Shared dir containing build files
 
 	Result string
+
+	Cancelled bool `gorm:"-"`
 }
 
 // NewJob create a new job
@@ -61,12 +63,19 @@ func NewJob(db *gorm.DB, buildJob BuildJob, uploadJob UploadJob) (*Job, error) {
 
 // Cancel Job
 func (job *Job) Cancel() {
+	job.Cancelled = true
+
+	// FIXME
+	go func() {
+		job.BuildJob.cancel <- true
+	}()
+	go func() {
+		job.UploadJob.cancel <- true
+	}()
+
 	job.BuildJob.State = libremotebuild.JobCancelled
 	job.UploadJob.State = libremotebuild.JobCancelled
 	job.Result = "Cancelled"
-
-	job.BuildJob.cancel <- true
-	job.UploadJob.cancel <- true
 }
 
 // SetState set the state of a job
@@ -99,6 +108,7 @@ func (job *Job) cleanup() {
 		log.Warn(err)
 	}
 
+	// TODO
 }
 
 // Run a job
@@ -116,16 +126,25 @@ func (job *Job) Run() error {
 	// Run Build
 	buildResult := job.BuildJob.Run()
 	if buildResult.Error != nil {
+		// if buildResult.Error != ErrorJobCancelled {
 		job.BuildJob.State = libremotebuild.JobFailed
 		log.Info("Build Failed:", buildResult.Error.Error())
+		// }
+
 		return buildResult.Error
+	}
+
+	if job.Cancelled {
+		return ErrorJobCancelled
 	}
 
 	// Run upload
 	uploadResult := job.UploadJob.Run()
 	if uploadResult.Error != nil {
+		// if buildResult.Error != ErrorJobCancelled {
 		job.UploadJob.State = libremotebuild.JobFailed
 		log.Info("Upload Failed:", uploadResult.Error.Error())
+		// }
 		return uploadResult.Error
 	}
 

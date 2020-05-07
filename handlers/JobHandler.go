@@ -5,6 +5,8 @@ import (
 
 	libremotebuild "github.com/JojiiOfficial/LibRemotebuild"
 	"github.com/JojiiOfficial/Remotebuild/models"
+	"github.com/JojiiOfficial/Remotebuild/services"
+	log "github.com/sirupsen/logrus"
 )
 
 // AddJob add a job
@@ -91,4 +93,29 @@ func listJobs(handlerData HandlerData, w http.ResponseWriter, r *http.Request) {
 	sendResponse(w, models.ResponseSuccess, "", libremotebuild.ListJobsResponse{
 		Jobs: jobInfos,
 	})
+}
+
+// cancelJob cancel a job
+func cancelJob(handlerData HandlerData, w http.ResponseWriter, r *http.Request) {
+	var request libremotebuild.CancelJobRequest
+	// Read request
+
+	if !readRequestLimited(w, r, &request, handlerData.Config.Webserver.MaxRequestBodyLength) {
+		return
+	}
+
+	// Remove from Queue
+	job := handlerData.JobService.Queue.RemoveJob(&services.JobQueueItem{JobID: request.JobID})
+
+	// Update state to cancelled
+	if job != nil {
+		job.Job.Cancel()
+		err := handlerData.Db.Save(job).Error
+		if err != nil {
+			log.Info(err)
+		}
+	}
+
+	// Remove from Db
+	handlerData.Db.Where("job_id=?", request.JobID).Delete(&services.JobQueueItem{})
 }

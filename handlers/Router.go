@@ -94,6 +94,13 @@ var (
 			HandlerFunc: listJobs,
 			HandlerType: sessionRequest,
 		},
+		Route{
+			Name:        "Cancel job",
+			Pattern:     libremotebuild.EPJobCancel,
+			Method:      POSTMethod,
+			HandlerFunc: cancelJob,
+			HandlerType: sessionRequest,
+		},
 	}
 )
 

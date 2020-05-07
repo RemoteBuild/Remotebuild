@@ -61,6 +61,30 @@ func (buildJob *BuildJob) Run() *BuildResult {
 	log.Debug("Run BuildJob ", buildJob.ID)
 	buildJob.State = libremotebuild.JobRunning
 
+	buildDone := make(chan bool, 1)
+	var result *BuildResult
+
+	// Run build in goroutine
+	go func() {
+		result = buildJob.build()
+		buildDone <- true
+	}()
+
+	// Await build or cancel
+	select {
+	case <-buildDone:
+		// On done
+		return result
+	case <-buildJob.cancel:
+		// On cancel
+		buildJob.State = libremotebuild.JobCancelled
+		return &BuildResult{
+			Error: ErrorJobCancelled,
+		}
+	}
+}
+
+func (buildJob *BuildJob) build() *BuildResult {
 	// TODO implement run job
 	time.Sleep(5 * time.Second)
 

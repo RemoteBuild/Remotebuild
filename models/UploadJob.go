@@ -42,6 +42,28 @@ func (uploadJob *UploadJob) Run() *UploadJobResult {
 	log.Debug("Run UploadJob ", uploadJob.ID)
 	uploadJob.State = libremotebuild.JobRunning
 
+	uploadDone := make(chan bool, 1)
+	var result *UploadJobResult
+
+	// Do Upload in goroutine
+	go func() {
+		result = uploadJob.upload()
+		uploadDone <- true
+	}()
+
+	// Await upload done or cancel
+	select {
+	case <-uploadDone:
+		// On Upload done
+		return result
+	case <-uploadJob.cancel:
+		// On cancel
+		uploadJob.State = libremotebuild.JobCancelled
+		return &UploadJobResult{Error: ErrorJobCancelled}
+	}
+}
+
+func (uploadJob *UploadJob) upload() *UploadJobResult {
 	// TODO upload the binary
 	time.Sleep(8 * time.Second)
 
