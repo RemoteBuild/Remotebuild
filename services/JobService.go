@@ -9,6 +9,8 @@ import (
 type JobService struct {
 	db     *gorm.DB
 	config *models.Config
+
+	Queue *JobQueue
 }
 
 // NewJobService create a new jobservice
@@ -16,6 +18,7 @@ func NewJobService(config *models.Config, db *gorm.DB) *JobService {
 	return &JobService{
 		db:     db,
 		config: config,
+		Queue:  NewJobQueue(),
 	}
 }
 
