@@ -80,6 +80,17 @@ func (job *Job) Cancel() {
 	job.UploadJob.cancel <- true
 }
 
+// SetState set the state of a job
+func (job *Job) SetState(newState JobState) {
+	// If build job is not done, set its job
+	if job.BuildJob.State != JobDone {
+		job.BuildJob.State = newState
+		return
+	}
+
+	job.UploadJob.State = newState
+}
+
 // GetState get state of a job
 func (job *Job) GetState() JobState {
 	// If BuildJob is not done yet, use its State

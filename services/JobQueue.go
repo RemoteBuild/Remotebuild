@@ -51,14 +51,29 @@ func (jq *JobQueue) Load() error {
 		return err
 	}
 
-	for range jobs {
-		go func() {
-			jq.tick <- true
-		}()
+	var jobsToUse []JobQueueItem
+
+	for i := range jobs {
+		jobState := jobs[i].Job.GetState()
+
+		// Set running jobs to waiting
+		if jobState == models.JobRunning {
+			jobState = models.JobWaiting
+			jobs[i].Job.SetState(models.JobWaiting)
+		}
+
+		// Ignore cancelled/failed/finished jobs
+		if jobState == models.JobRunning || jobState == models.JobWaiting {
+			go func() {
+				jq.tick <- true
+			}()
+
+			jobsToUse = append(jobsToUse, jobs[i])
+		}
 	}
 
-	jq.jobs = jobs
-	log.Infof("Loaded %d Jobs from old queue", len(jobs))
+	jq.jobs = jobsToUse
+	log.Infof("Loaded %d Jobs from old queue", len(jobsToUse))
 	return nil
 }
 
