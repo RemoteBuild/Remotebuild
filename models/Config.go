@@ -20,7 +20,6 @@ type Config struct {
 }
 
 type webserverConf struct {
-	Profiling            bool
 	MaxHeaderLength      uint  `default:"8000" required:"true"`
 	MaxRequestBodyLength int64 `default:"10000" required:"true"`
 	ReadTimeout          time.Duration
@@ -32,8 +31,13 @@ type webserverConf struct {
 type configServer struct {
 	Database                  configDBstruct
 	Roles                     roleConfig
+	Jobs                      jobconfig
 	AllowRegistration         bool          `default:"false"`
 	DeleteUnusedSessionsAfter time.Duration `default:"10m"`
+}
+
+type jobconfig struct {
+	Images map[string]string
 }
 
 type roleConfig struct {
@@ -109,7 +113,12 @@ func InitConfig(confFile string, createMode bool) (*Config, bool) {
 					DatabasePort: 5432,
 					SSLMode:      "require",
 				},
-				AllowRegistration:         false,
+				AllowRegistration: false,
+				Jobs: jobconfig{
+					Images: map[string]string{
+						JobAUR.String(): "jojii/buildaur:v1.0",
+					},
+				},
 				DeleteUnusedSessionsAfter: 10 * time.Minute,
 				Roles: roleConfig{
 					DefaultRole: 1,
@@ -128,7 +137,6 @@ func InitConfig(confFile string, createMode bool) (*Config, bool) {
 				},
 			},
 			Webserver: webserverConf{
-				Profiling: false,
 				HTTP: configHTTPstruct{
 					Enabled:       true,
 					ListenAddress: ":80",
@@ -154,7 +162,12 @@ func InitConfig(confFile string, createMode bool) (*Config, bool) {
 		}
 	}
 
-	if err = configService.Load(&config, confFile); err != nil {
+	if err = configService.New(&configService.Config{
+		AutoReloadCallback: func(config interface{}) {
+			log.Info("Config changed")
+		},
+		AutoReload: true,
+	}).Load(&config, confFile); err != nil {
 		log.Fatalln(err.Error())
 		return nil, true
 	}

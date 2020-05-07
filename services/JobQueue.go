@@ -1,6 +1,8 @@
 package services
 
-import "github.com/JojiiOfficial/Remotebuild/models"
+import (
+	"github.com/JojiiOfficial/Remotebuild/models"
+)
 
 // JobQueue a queue for jobs
 type JobQueue struct {

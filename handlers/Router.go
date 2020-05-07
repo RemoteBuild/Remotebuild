@@ -3,7 +3,6 @@ package handlers
 import (
 	"fmt"
 	"net/http"
-	"net/http/pprof"
 	"time"
 
 	"github.com/JojiiOfficial/Remotebuild/models"
@@ -79,7 +78,7 @@ var (
 	}
 )
 
-//NewRouter create new router
+// NewRouter create new router
 func NewRouter(config *models.Config, db *gorm.DB, jobService *services.JobService) *mux.Router {
 	handlerData := HandlerData{
 		Config:     config,
@@ -96,27 +95,10 @@ func NewRouter(config *models.Config, db *gorm.DB, jobService *services.JobServi
 			Handler(RouteHandler(route.HandlerType, &handlerData, route.HandlerFunc, route.Name))
 	}
 
-	// Add profiler func if profiling is enabled
-	if config.Webserver.Profiling {
-		addProfilerFuncs(router)
-	}
-
 	return router
 }
 
-// add pprof funcs
-func addProfilerFuncs(router *mux.Router) {
-	router.HandleFunc("/debug/pprof/", pprof.Index)
-	router.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
-	router.HandleFunc("/debug/pprof/profile", pprof.Profile)
-	router.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
-	router.Handle("/debug/pprof/heap", pprof.Handler("heap"))
-	router.Handle("/debug/pprof/goroutine", pprof.Handler("goroutine"))
-	router.Handle("/debug/pprof/block", pprof.Handler("block"))
-	router.Handle("/debug/pprof/threadcreate", pprof.Handler("threadcreate"))
-}
-
-//RouteHandler logs stuff
+// RouteHandler logs stuff
 func RouteHandler(requestType requestType, handlerData *HandlerData, inner RouteFunction, name string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
@@ -138,22 +120,22 @@ func RouteHandler(requestType requestType, handlerData *HandlerData, inner Route
 			return
 		}
 
-		//Validate request by requestType
+		// Validate request by requestType
 		if !requestType.validate(handlerData, r, w) {
 			return
 		}
 
-		//Process request
+		// Process request
 		inner(*handlerData, w, r)
 
-		//Print duration of processing
+		// Print duration of processing
 		if needDebug {
 			printProcessingDuration(start)
 		}
 	})
 }
 
-//Return false on error
+// Return false on error
 func (requestType requestType) validate(handlerData *HandlerData, r *http.Request, w http.ResponseWriter) bool {
 	switch requestType {
 	case sessionRequest:
@@ -182,7 +164,7 @@ func (requestType requestType) validate(handlerData *HandlerData, r *http.Reques
 	return true
 }
 
-//Prints the duration of handling the function
+// Prints the duration of handling the function
 func printProcessingDuration(startTime time.Time) {
 	dur := time.Since(startTime)
 
@@ -193,13 +175,13 @@ func printProcessingDuration(startTime time.Time) {
 	}
 }
 
-//Return true on error
+// Return true on error
 func validateHeader(config *models.Config, w http.ResponseWriter, r *http.Request) bool {
 	headerSize := gaw.GetHeaderSize(r.Header)
 
-	//Send error if header are too big. MaxHeaderLength is stored in b
+	// Send error if header are too big. MaxHeaderLength is stored in b
 	if headerSize > uint32(config.Webserver.MaxHeaderLength) {
-		//Send error response
+		// Send error response
 		w.WriteHeader(http.StatusRequestEntityTooLarge)
 		fmt.Fprint(w, "413 request too large")
 

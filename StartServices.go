@@ -38,10 +38,6 @@ func startAPI() {
 	cleanupService = services.NewClienupService(config, db)
 	cleanupService.Start()
 
-	if config.Webserver.Profiling {
-		log.Info("Starting in profiling mode")
-	}
-
 	// Startup done
 	log.Info("Startup completed")
 
@@ -67,6 +63,7 @@ func awaitExit(httpServer *services.APIService, db *gorm.DB) {
 		if err != nil {
 			log.Warn(err)
 		}
+
 		log.Info("HTTP server shutdown complete")
 	}
 
@@ -75,6 +72,7 @@ func awaitExit(httpServer *services.APIService, db *gorm.DB) {
 		if err != nil {
 			log.Warn(err)
 		}
+
 		log.Info("HTTPs server shutdown complete")
 	}
 
