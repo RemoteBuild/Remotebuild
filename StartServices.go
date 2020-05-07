@@ -35,6 +35,7 @@ func startAPI() {
 	})
 	apiService.Start()
 
+	// Create cleanup service
 	cleanupService = services.NewClienupService(config, db)
 	cleanupService.Start()
 

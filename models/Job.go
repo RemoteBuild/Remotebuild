@@ -135,6 +135,13 @@ func (job *Job) cleanup() {
 
 // Run a job
 func (job *Job) Run() error {
+	if job == nil {
+		log.Warn("Job is nil")
+		return nil
+	}
+
+	log.Debug("Run job ", job.ID)
+
 	// Cleanup data at the end
 	defer job.cleanup()
 
@@ -154,5 +161,6 @@ func (job *Job) Run() error {
 		return uploadResult.Error
 	}
 
+	log.Infof("Job %d done", job.ID)
 	return nil
 }

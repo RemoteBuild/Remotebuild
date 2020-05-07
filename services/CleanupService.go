@@ -51,7 +51,9 @@ func (cs *CleanupService) deleteUnusedSessions() {
 		return
 	}
 
-	log.Infof("Deleted %d unused sessions", e.RowsAffected)
+	if e.RowsAffected > 0 {
+		log.Infof("Deleted %d unused sessions", e.RowsAffected)
+	}
 }
 
 // just debug things

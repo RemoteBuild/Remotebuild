@@ -1,6 +1,11 @@
 package models
 
-import "github.com/jinzhu/gorm"
+import (
+	"time"
+
+	"github.com/jinzhu/gorm"
+	log "github.com/sirupsen/logrus"
+)
 
 // BuildJob a job which builds a package
 type BuildJob struct {
@@ -32,15 +37,14 @@ func NewBuildJob(db *gorm.DB, buildJob BuildJob) (*BuildJob, error) {
 	return &buildJob, nil
 }
 
-// Start a buildjob
-func (buildJob *BuildJob) Start() {
-	go buildJob.Run()
-}
-
 // Run a buildjob (start but await)
 func (buildJob *BuildJob) Run() *BuildResult {
+	log.Debug("Run BuildJob ", buildJob.ID)
 	// TODO implement run job
+	time.Sleep(2 * time.Second)
 
 	buildJob.State = JobDone
-	return nil
+	return &BuildResult{
+		Error: nil,
+	}
 }

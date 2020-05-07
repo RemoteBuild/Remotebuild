@@ -35,7 +35,9 @@ func (js *JobService) Start() {
 
 // Run Start a job and await complete
 func (js *JobService) Run() {
-	// TODO
+	log.Info("Starting JobService")
+	// Start Build Queue
+	js.Queue.Start()
 }
 
 func (js *JobService) check() bool {

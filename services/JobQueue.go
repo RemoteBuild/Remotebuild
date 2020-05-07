@@ -1,32 +1,23 @@
 package services
 
 import (
+	"sort"
+	"sync"
+
 	"github.com/JojiiOfficial/Remotebuild/models"
 	"github.com/jinzhu/gorm"
 	log "github.com/sirupsen/logrus"
 )
 
-// JobQueueItem Item in JobQueue
-type JobQueueItem struct {
-	gorm.Model
-
-	JobID uint        `sql:"index"`
-	Job   *models.Job `gorm:"association_autoupdate:false;association_autocreate:false"`
-
-	Position uint // The position in the Queue
-
-	Done bool // Wether the Job is already done or not
-}
-
-// TableName use "JobQueue" as tablename
-func (jqi JobQueueItem) TableName() string {
-	return "job_queue"
-}
-
 // JobQueue a queue for jobs
 type JobQueue struct {
-	db   *gorm.DB
-	Jobs []JobQueueItem
+	db *gorm.DB
+
+	jobs []JobQueueItem
+
+	mx sync.RWMutex
+
+	tick chan bool
 }
 
 // NewJobQueue create a new JobQueue
@@ -40,6 +31,8 @@ func NewJobQueue(db *gorm.DB) *JobQueue {
 	if err != nil {
 		log.Fatalln(err)
 	}
+
+	queue.tick = make(chan bool)
 
 	return queue
 }
@@ -58,7 +51,14 @@ func (jq *JobQueue) Load() error {
 		return err
 	}
 
-	jq.Jobs = jobs
+	for range jobs {
+		go func() {
+			jq.tick <- true
+		}()
+	}
+
+	jq.jobs = jobs
+	log.Infof("Loaded %d Jobs from old queue", len(jobs))
 	return nil
 }
 
@@ -81,6 +81,85 @@ func (jq *JobQueue) AddJob(job *models.Job) (*JobQueueItem, error) {
 		return nil, err
 	}
 
-	jq.Jobs = append(jq.Jobs, *item)
+	jq.mx.Lock()
+	defer jq.mx.Unlock()
+
+	jq.jobs = append(jq.jobs, *item)
+
+	go func() {
+		jq.tick <- true
+	}()
+
+	log.Debugf("Job %d added", item.ID)
 	return item, nil
+}
+
+// Start the queue async
+func (jq *JobQueue) Start() {
+	go jq.Run()
+}
+
+// Run the queue
+func (jq *JobQueue) Run() {
+	log.Info("Starting JobQueue")
+
+	for {
+		job := jq.nextJob()
+		jq.run(job)
+	}
+}
+
+// Run a QueueItem
+func (jq *JobQueue) run(jqi *JobQueueItem) {
+	// Get Job
+	job, err := jqi.GetJob(jq.db)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	// Run job and log errors
+	if err := job.Run(); err != nil {
+		log.Warn("Job exited with error:", err)
+	}
+
+	// Job is done after run, whatever
+	// state it exited
+	jqi.Done = true
+
+	// Remove Job from queue
+	jq.removeItem(jqi)
+
+	// Update DB
+	if err := jq.db.Save(&jqi).Error; err != nil {
+		log.Warn(err)
+	}
+}
+
+func (jq *JobQueue) nextJob() *JobQueueItem {
+	<-jq.tick
+	sort.Sort(SortByPosition(jq.jobs))
+	return &jq.jobs[0]
+}
+
+// Remove item from jobQueue
+func (jq *JobQueue) removeItem(item *JobQueueItem) {
+	i := -1
+
+	// Find job in Queue slice
+	for j := range jq.jobs {
+		if jq.jobs[j].ID == item.JobID {
+			i = j
+			break
+		}
+	}
+
+	// exit if pos not found
+	if i == -1 {
+		return
+	}
+
+	// Remove
+	jq.jobs[len(jq.jobs)-1], jq.jobs[i] = jq.jobs[i], jq.jobs[len(jq.jobs)-1]
+	jq.jobs = jq.jobs[:len(jq.jobs)-1]
 }

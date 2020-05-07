@@ -1,7 +1,10 @@
 package models
 
 import (
+	"time"
+
 	"github.com/jinzhu/gorm"
+	log "github.com/sirupsen/logrus"
 )
 
 // UploadJob a job which uploads a built package
@@ -39,8 +42,13 @@ func NewUploadJob(db *gorm.DB, uploadJob UploadJob) (*UploadJob, error) {
 
 // Run an upload job
 func (uploadJob *UploadJob) Run() *UploadJobResult {
+	log.Debug("Run UploadJob ", uploadJob.ID)
+
 	// TODO upload the binary
+	time.Sleep(1 * time.Second)
 
 	uploadJob.State = JobDone
-	return nil
+	return &UploadJobResult{
+		Error: nil,
+	}
 }
