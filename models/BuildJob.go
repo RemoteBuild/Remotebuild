@@ -1,25 +1,25 @@
 package models
 
 import (
-	"encoding/json"
-	"time"
+	"fmt"
 
 	libremotebuild "github.com/JojiiOfficial/LibRemotebuild"
+	docker "github.com/fsouza/go-dockerclient"
 	"github.com/jinzhu/gorm"
 	log "github.com/sirupsen/logrus"
 )
 
 // BuildJob a job which builds a package
 type BuildJob struct {
+	*docker.Client `gorm:"-"`
 	gorm.Model
 	State libremotebuild.JobState // Build state
 	Type  libremotebuild.JobType  // Type of job
 
-	Image   string            // Dockerimage to run
-	Args    map[string]string `gorm:"-"` // Envars for Dockerimage
-	Argdata string            `grom:"type:jsonb"`
+	Image string // Dockerimage to run
 
-	cancel chan bool `gorm:"-"` // Cancel chan
+	cancel      chan bool `gorm:"-"` // Cancel chan
+	containerID string    `gorm:"-"`
 }
 
 // BuildResult result of a bulid
@@ -33,7 +33,10 @@ func NewBuildJob(db *gorm.DB, buildJob BuildJob) (*BuildJob, error) {
 	buildJob.State = libremotebuild.JobWaiting
 	buildJob.cancel = make(chan bool, 1)
 
-	buildJob.putArgs()
+	// Connect to docker
+	if err := buildJob.connectDocker(); err != nil {
+		return nil, err
+	}
 
 	// Save Job to Db
 	err := db.Create(&buildJob).Error
@@ -44,20 +47,8 @@ func NewBuildJob(db *gorm.DB, buildJob BuildJob) (*BuildJob, error) {
 	return &buildJob, nil
 }
 
-// Tranlate Args to Argdata
-func (buildJob *BuildJob) putArgs() error {
-	b, err := json.Marshal(buildJob.Args)
-	if err != nil {
-		return err
-	}
-
-	buildJob.Argdata = string(b)
-
-	return nil
-}
-
 // Run a buildjob (start but await)
-func (buildJob *BuildJob) Run() *BuildResult {
+func (buildJob *BuildJob) Run(dataDir string, args map[string]string) *BuildResult {
 	log.Debug("Run BuildJob ", buildJob.ID)
 	buildJob.State = libremotebuild.JobRunning
 
@@ -66,7 +57,7 @@ func (buildJob *BuildJob) Run() *BuildResult {
 
 	// Run build in goroutine
 	go func() {
-		result = buildJob.build()
+		result = buildJob.build(dataDir, args)
 		buildDone <- true
 	}()
 
@@ -77,6 +68,7 @@ func (buildJob *BuildJob) Run() *BuildResult {
 		return result
 	case <-buildJob.cancel:
 		// On cancel
+		fmt.Println("cancel received")
 		buildJob.State = libremotebuild.JobCancelled
 		return &BuildResult{
 			Error: ErrorJobCancelled,
@@ -84,12 +76,138 @@ func (buildJob *BuildJob) Run() *BuildResult {
 	}
 }
 
-func (buildJob *BuildJob) build() *BuildResult {
-	// TODO implement run job
-	time.Sleep(5 * time.Second)
+// Connect to dockerClient
+func (buildJob *BuildJob) connectDocker() error {
+	if buildJob.Client != nil {
+		return nil
+	}
 
+	var err error
+	buildJob.Client, err = docker.NewClientFromEnv()
+	return err
+}
+
+func (buildJob *BuildJob) build(dataDir string, args map[string]string) *BuildResult {
+	// Connect to docker if not already done
+	if err := buildJob.connectDocker(); err != nil {
+		buildJob.State = libremotebuild.JobFailed
+		return &BuildResult{
+			Error: err,
+		}
+	}
+
+	// Pull image if neccessary
+	if err := buildJob.pullImageIfNeeded(buildJob.Image); err != nil {
+		buildJob.State = libremotebuild.JobFailed
+		return &BuildResult{
+			Error: err,
+		}
+	}
+
+	// Create container
+	container, err := buildJob.getContainer(dataDir, args)
+	if err != nil {
+		buildJob.State = libremotebuild.JobFailed
+		return &BuildResult{
+			Error: err,
+		}
+	}
+
+	// Start container
+	if err = buildJob.StartContainer(container.ID, &docker.HostConfig{}); err != nil {
+		buildJob.State = libremotebuild.JobFailed
+		return &BuildResult{
+			Error: err,
+		}
+	}
+
+	// Wait until building is done
+	n, err := buildJob.WaitContainer(container.ID)
+	if err != nil {
+		buildJob.State = libremotebuild.JobFailed
+		return &BuildResult{
+			Error: err,
+		}
+	}
+
+	// Check container exit code
+	if n != 0 {
+		buildJob.State = libremotebuild.JobFailed
+		return &BuildResult{
+			Error: ErrorNonZeroExit,
+		}
+	}
+
+	// Set done
 	buildJob.State = libremotebuild.JobDone
 	return &BuildResult{
 		Error: nil,
 	}
+}
+
+// Create build container
+func (buildJob *BuildJob) getContainer(dataDir string, args map[string]string) (*docker.Container, error) {
+	// Create container
+	container, err := buildJob.CreateContainer(docker.CreateContainerOptions{
+		Config: &docker.Config{
+			Image: buildJob.Image,
+			Env:   argsToEnvs(args),
+		},
+		HostConfig: &docker.HostConfig{
+			// Mount /home/builduser on host /tmp/remotebuild_XXXXXXXXXX
+			Mounts: []docker.HostMount{{
+				Source: dataDir,
+				BindOptions: &docker.BindOptions{
+					Propagation: "rprivate",
+				},
+				ReadOnly: false,
+				Type:     "bind",
+				Target:   "/home/builduser",
+			}},
+			// Autodelete container afterwards
+			AutoRemove: true,
+		},
+	})
+
+	if err == nil {
+		buildJob.containerID = container.ID
+	}
+
+	return container, err
+}
+
+func (buildJob *BuildJob) hasImage(image string) (bool, error) {
+	// Get all images
+	images, err := buildJob.Client.ListImages(docker.ListImagesOptions{All: false})
+	if err != nil {
+		return false, err
+	}
+
+	// Search tag in available images/tags
+	for i := range images {
+		for _, tag := range images[i].RepoTags {
+			if image == tag {
+				return true, nil
+			}
+		}
+	}
+
+	return false, nil
+}
+
+func (buildJob *BuildJob) pullImageIfNeeded(image string) error {
+	hasImage, err := buildJob.hasImage(image)
+	if err != nil || hasImage {
+		return err
+	}
+
+	log.Debug("Pulling Image ", image)
+
+	// Pull image
+	return buildJob.PullImage(docker.PullImageOptions{
+		Registry:   "docker.io",
+		Repository: image,
+	}, docker.AuthConfiguration{
+		ServerAddress: "docker.io",
+	})
 }

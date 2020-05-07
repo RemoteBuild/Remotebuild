@@ -9,7 +9,6 @@ import (
 
 	"github.com/JojiiOfficial/Remotebuild/handlers"
 	"github.com/JojiiOfficial/Remotebuild/services"
-	docker "github.com/fsouza/go-dockerclient"
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
 
@@ -26,19 +25,13 @@ var (
 func startAPI() {
 	log.Info("Starting version " + version)
 
-	// Connect to docker
-	dockerClient, err := docker.NewClientFromEnv()
-	if err != nil {
-		log.Fatalln(err)
-	}
-
 	// Create and start the jobservice
 	jobService = services.NewJobService(config, db)
 	jobService.Start()
 
 	// Create and start required services
 	apiService = services.NewAPIService(config, func() *mux.Router {
-		return handlers.NewRouter(config, db, jobService, dockerClient)
+		return handlers.NewRouter(config, db, jobService)
 	})
 	apiService.Start()
 

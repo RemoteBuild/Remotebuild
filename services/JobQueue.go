@@ -14,9 +14,10 @@ import (
 
 // JobQueue a queue for jobs
 type JobQueue struct {
-	db   *gorm.DB
-	jobs []JobQueueItem
-	mx   sync.RWMutex
+	db         *gorm.DB
+	jobs       []JobQueueItem
+	mx         sync.RWMutex
+	CurrentJob *JobQueueItem
 }
 
 // NewJobQueue create a new JobQueue
@@ -116,7 +117,9 @@ func (jq *JobQueue) Run() {
 
 	for {
 		job := jq.nextJob()
+		jq.CurrentJob = job
 		jq.run(job)
+		jq.CurrentJob = nil
 	}
 }
 
@@ -174,7 +177,6 @@ func (jq *JobQueue) RemoveJob(item *JobQueueItem) *JobQueueItem {
 
 	// Find job in Queue slice
 	for j := range jq.jobs {
-		fmt.Println(jq.jobs[j].ID, item.JobID)
 		if jq.jobs[j].ID == item.JobID {
 			i = j
 			retitem = &jq.jobs[j]

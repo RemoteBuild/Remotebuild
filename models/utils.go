@@ -17,3 +17,11 @@ func setHeadersFromStr(headers string, header *http.Header) {
 		(*header).Set(key, kp[1])
 	}
 }
+
+func argsToEnvs(args map[string]string) []string {
+	var s []string
+	for k, v := range args {
+		s = append(s, k+"="+v)
+	}
+	return s
+}

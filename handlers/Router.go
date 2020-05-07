@@ -8,7 +8,6 @@ import (
 	libremotebuild "github.com/JojiiOfficial/LibRemotebuild"
 	"github.com/JojiiOfficial/Remotebuild/models"
 	"github.com/JojiiOfficial/Remotebuild/services"
-	docker "github.com/fsouza/go-dockerclient"
 
 	"github.com/JojiiOfficial/gaw"
 	"github.com/jinzhu/gorm"
@@ -105,12 +104,11 @@ var (
 )
 
 // NewRouter create new router
-func NewRouter(config *models.Config, db *gorm.DB, jobService *services.JobService, dockerClient *docker.Client) *mux.Router {
+func NewRouter(config *models.Config, db *gorm.DB, jobService *services.JobService) *mux.Router {
 	handlerData := HandlerData{
-		Config:       config,
-		Db:           db,
-		JobService:   jobService,
-		DockerClient: dockerClient,
+		Config:     config,
+		Db:         db,
+		JobService: jobService,
 	}
 
 	router := mux.NewRouter().StrictSlash(true)

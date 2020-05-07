@@ -1,6 +1,7 @@
 package models
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
 
@@ -20,15 +21,16 @@ type Job struct {
 	UploadJobID uint       `sql:"index"`
 	UploadJob   *UploadJob `gorm:"association_autoupdate:false;association_autocreate:false"`
 
-	DataDir string // Shared dir containing build files
-
-	Result string
-
+	DataDir   string // Shared dir containing build files
+	Result    string
 	Cancelled bool `gorm:"-"`
+
+	Args    map[string]string `gorm:"-"` // Envars for Dockerimage
+	Argdata string            `grom:"type:jsonb"`
 }
 
 // NewJob create a new job
-func NewJob(db *gorm.DB, buildJob BuildJob, uploadJob UploadJob) (*Job, error) {
+func NewJob(db *gorm.DB, buildJob BuildJob, uploadJob UploadJob, args map[string]string) (*Job, error) {
 	// Create temporary path for storing build data
 	path := filepath.Join(os.TempDir(), "remotebbulid_"+gaw.RandString(30))
 	err := os.MkdirAll(path, 0700)
@@ -36,7 +38,12 @@ func NewJob(db *gorm.DB, buildJob BuildJob, uploadJob UploadJob) (*Job, error) {
 		return nil, err
 	}
 
-	job := &Job{DataDir: path}
+	job := &Job{
+		DataDir: path,
+		Args:    args,
+	}
+
+	job.putArgs()
 
 	// Create BuildJob
 	bJob, err := NewBuildJob(db, buildJob)
@@ -59,6 +66,18 @@ func NewJob(db *gorm.DB, buildJob BuildJob, uploadJob UploadJob) (*Job, error) {
 	}
 
 	return job, nil
+}
+
+// Tranlate Args to Argdata
+func (job *Job) putArgs() error {
+	b, err := json.Marshal(job.Args)
+	if err != nil {
+		return err
+	}
+
+	job.Argdata = string(b)
+
+	return nil
 }
 
 // Cancel Job
@@ -102,6 +121,7 @@ func (job *Job) GetState() libremotebuild.JobState {
 
 // Cleanup a job
 func (job *Job) cleanup() {
+	log.Debug("cleanup")
 	// Remove Data dir
 	err := os.RemoveAll(job.DataDir)
 	if err != nil {
@@ -124,12 +144,12 @@ func (job *Job) Run() error {
 	defer job.cleanup()
 
 	// Run Build
-	buildResult := job.BuildJob.Run()
+	buildResult := job.BuildJob.Run(job.DataDir, job.Args)
 	if buildResult.Error != nil {
-		// if buildResult.Error != ErrorJobCancelled {
-		job.BuildJob.State = libremotebuild.JobFailed
-		log.Info("Build Failed:", buildResult.Error.Error())
-		// }
+		if buildResult.Error != ErrorJobCancelled {
+			job.BuildJob.State = libremotebuild.JobFailed
+			log.Info("Build Failed:", buildResult.Error.Error())
+		}
 
 		return buildResult.Error
 	}
@@ -141,10 +161,10 @@ func (job *Job) Run() error {
 	// Run upload
 	uploadResult := job.UploadJob.Run()
 	if uploadResult.Error != nil {
-		// if buildResult.Error != ErrorJobCancelled {
-		job.UploadJob.State = libremotebuild.JobFailed
-		log.Info("Upload Failed:", uploadResult.Error.Error())
-		// }
+		if buildResult.Error != ErrorJobCancelled {
+			job.UploadJob.State = libremotebuild.JobFailed
+			log.Info("Upload Failed:", uploadResult.Error.Error())
+		}
 		return uploadResult.Error
 	}
 

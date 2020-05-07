@@ -43,10 +43,9 @@ func addJob(handlerData HandlerData, w http.ResponseWriter, r *http.Request) {
 	job, err := models.NewJob(handlerData.Db, models.BuildJob{
 		Type:  request.Type,
 		Image: image,
-		Args:  request.Args,
 	}, models.UploadJob{
 		Type: request.UploadType,
-	})
+	}, request.Args)
 
 	if LogError(err) {
 		sendServerError(w)
@@ -109,7 +108,7 @@ func cancelJob(handlerData HandlerData, w http.ResponseWriter, r *http.Request) 
 
 	// Update state to cancelled
 	if job != nil {
-		job.Job.Cancel()
+		handlerData.JobService.Queue.CurrentJob.Job.Cancel()
 		err := handlerData.Db.Save(job).Error
 		if err != nil {
 			log.Info(err)
