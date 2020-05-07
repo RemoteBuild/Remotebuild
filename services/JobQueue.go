@@ -10,8 +10,8 @@ import (
 type JobQueueItem struct {
 	gorm.Model
 
-	JobID uint `sql:"index"`
-	Job   *models.Job
+	JobID uint        `sql:"index"`
+	Job   *models.Job `gorm:"association_autoupdate:false;association_autocreate:false"`
 
 	Position uint // The position in the Queue
 
@@ -26,7 +26,7 @@ func (jqi JobQueueItem) TableName() string {
 // JobQueue a queue for jobs
 type JobQueue struct {
 	db   *gorm.DB
-	Jobs []*JobQueueItem
+	Jobs []JobQueueItem
 }
 
 // NewJobQueue create a new JobQueue
@@ -46,6 +46,19 @@ func NewJobQueue(db *gorm.DB) *JobQueue {
 
 // Load queue from Db
 func (jq *JobQueue) Load() error {
+	var jobs []JobQueueItem
+
+	// Load unfinished jobs
+	err := jq.db.Model(&JobQueueItem{}).
+		Preload("Job").
+		Preload("Job.BuildJob").
+		Preload("Job.UploadJob").
+		Where("done=false").Find(&jobs).Error
+	if err != nil {
+		return err
+	}
+
+	jq.Jobs = jobs
 	return nil
 }
 
@@ -68,6 +81,6 @@ func (jq *JobQueue) AddJob(job *models.Job) (*JobQueueItem, error) {
 		return nil, err
 	}
 
-	jq.Jobs = append(jq.Jobs, item)
+	jq.Jobs = append(jq.Jobs, *item)
 	return item, nil
 }

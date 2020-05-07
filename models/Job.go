@@ -70,7 +70,7 @@ func ParseJobType(inp string) JobType {
 // NewJob create a new job
 func NewJob(db *gorm.DB, buildJob BuildJob, uploadJob UploadJob) (*Job, error) {
 	// Create temporary path for storing build data
-	path := filepath.Join(os.TempDir(), gaw.RandString(30))
+	path := filepath.Join(os.TempDir(), "remotebbulid_"+gaw.RandString(30))
 	err := os.MkdirAll(path, 0700)
 	if err != nil {
 		return nil, err

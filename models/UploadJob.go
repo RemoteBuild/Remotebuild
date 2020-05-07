@@ -10,6 +10,15 @@ type UploadJob struct {
 	State JobState // Upload state
 }
 
+// UploadJobType type of uploadJob
+type UploadJobType uint8
+
+// ...
+const (
+	NoUploadType UploadJobType = iota
+	DataManagerUploadType
+)
+
 // NewUploadJob create new upload job
 func NewUploadJob(db *gorm.DB, uploadJob UploadJob) (*UploadJob, error) {
 	uploadJob.State = JobWaiting

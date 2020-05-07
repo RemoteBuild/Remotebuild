@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -39,12 +40,10 @@ func startAPI() {
 	cleanupService = services.NewClienupService(config, db)
 	cleanupService.Start()
 
-	job, err := models.NewJob(db, models.BuildJob{
-		Image: config.Server.Jobs.Images[models.JobAUR.String()],
-	}, models.UploadJob{})
-
+	job, err := models.NewJob(db, models.BuildJob{}, models.UploadJob{})
 	if err != nil {
-		log.Fatalln(err)
+		fmt.Println(err)
+		return
 	}
 	jobService.Queue.AddJob(job)
 
