@@ -116,6 +116,20 @@ func (job *Job) GetState() libremotebuild.JobState {
 	return job.UploadJob.State
 }
 
+// Info for job
+func (job *Job) Info() string {
+	if job.BuildJob == nil {
+		return "<noInfo>"
+	}
+
+	switch job.BuildJob.Type {
+	case libremotebuild.JobAUR:
+		return "AUR: " + job.Args[libremotebuild.AURPackage]
+	}
+
+	return "<noInfo>"
+}
+
 // Cleanup a job
 func (job *Job) cleanup() {
 	// Remove Data dir

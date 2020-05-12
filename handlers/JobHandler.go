@@ -77,6 +77,7 @@ func listJobs(handlerData HandlerData, w http.ResponseWriter, r *http.Request) {
 
 		jobInfos[i] = libremotebuild.JobInfo{
 			ID:         job.ID,
+			Info:       job.Info(),
 			BuildType:  job.BuildJob.Type,
 			Position:   jobQueueItem.Position,
 			Status:     job.GetState(),
@@ -108,15 +109,20 @@ func cancelJob(handlerData HandlerData, w http.ResponseWriter, r *http.Request) 
 
 	// Update state to cancelled
 	if job != nil {
+		// Cancel job
 		job.Job.Cancel()
-		err := handlerData.Db.Save(job).Error
-		if err != nil {
+
+		if err := handlerData.Db.Save(job).Error; err != nil {
 			log.Info(err)
 		}
+
+		// send success
+		sendResponse(w, models.ResponseSuccess, "cancel successful", nil)
+	} else {
+		sendResponse(w, models.ResponseError, "no such job found", nil, http.StatusNotFound)
 	}
 
 	// Remove from Db
 	handlerData.Db.Where("job_id=?", request.JobID).Delete(&services.JobQueueItem{})
-
 	log.Info("Cancelled Job ", request.JobID)
 }

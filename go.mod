@@ -4,7 +4,7 @@ go 1.14
 
 require (
 	github.com/DataManager-Go/libdatamanager v1.2.4
-	github.com/JojiiOfficial/LibRemotebuild v0.0.3
+	github.com/JojiiOfficial/LibRemotebuild v0.0.5
 	github.com/JojiiOfficial/configService v0.0.0-20200219132202-6e71512e2e28
 	github.com/JojiiOfficial/gaw v1.2.1
 	github.com/Microsoft/hcsshim v0.8.9 // indirect
@@ -22,8 +22,8 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/sirupsen/logrus v1.6.0
 	golang.org/x/sync v0.0.0-20200317015054-43a5402ce75a // indirect
-	golang.org/x/sys v0.0.0-20200501145240-bc7a7d42d5c3 // indirect
-	google.golang.org/genproto v0.0.0-20200507105951-43844f6eee31 // indirect
+	golang.org/x/sys v0.0.0-20200511232937-7e40ca221e25 // indirect
+	google.golang.org/genproto v0.0.0-20200511104702-f5ebc3bea380 // indirect
 	google.golang.org/grpc v1.29.1 // indirect
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 )
