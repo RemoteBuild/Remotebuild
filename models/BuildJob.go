@@ -20,8 +20,8 @@ type BuildJob struct {
 
 	Image string // Dockerimage to run
 
-	cancel      chan bool `gorm:"-"` // Cancel chan
-	containerID string    `gorm:"-"`
+	cancelChan  chan bool `gorm:"-"` // Cancel chan
+	ContainerID string    `gorm:"-"`
 }
 
 // BuildResult result of a bulid
@@ -33,7 +33,7 @@ type BuildResult struct {
 // NewBuildJob create new BuildJob
 func NewBuildJob(db *gorm.DB, buildJob BuildJob) (*BuildJob, error) {
 	buildJob.State = libremotebuild.JobWaiting
-	buildJob.cancel = make(chan bool, 1)
+	buildJob.cancelChan = make(chan bool, 1)
 
 	// Connect to docker
 	if err := buildJob.connectDocker(); err != nil {
@@ -52,8 +52,8 @@ func NewBuildJob(db *gorm.DB, buildJob BuildJob) (*BuildJob, error) {
 // Init buildJob
 func (buildJob *BuildJob) Init() error {
 	// Init channel
-	if buildJob.cancel == nil {
-		buildJob.cancel = make(chan bool, 1)
+	if buildJob.cancelChan == nil {
+		buildJob.cancelChan = make(chan bool, 1)
 	}
 
 	// Connect to docker
@@ -87,7 +87,7 @@ func (buildJob *BuildJob) Run(dataDir string, argParser *ArgParser) *BuildResult
 	case <-buildDone:
 		// On done
 		return result
-	case <-buildJob.cancel:
+	case <-buildJob.cancelChan:
 		// On cancel
 		buildJob.Stop()
 		buildJob.State = libremotebuild.JobCancelled
@@ -245,7 +245,7 @@ func (buildJob *BuildJob) getContainer(dataDir string, env []string) (*docker.Co
 	})
 
 	if err == nil {
-		buildJob.containerID = container.ID
+		buildJob.ContainerID = container.ID
 	}
 
 	return container, err
@@ -296,8 +296,18 @@ func (buildJob *BuildJob) pullImageIfNeeded(image string) error {
 
 // Stop building
 func (buildJob *BuildJob) Stop() {
-	if len(buildJob.containerID) > 0 && buildJob.Client != nil {
-		log.Info("Stopping container ", buildJob.containerID)
-		buildJob.StopContainer(buildJob.containerID, 1)
+	if len(buildJob.ContainerID) > 0 && buildJob.Client != nil {
+		log.Info("Stopping container ", buildJob.ContainerID)
+		buildJob.StopContainer(buildJob.ContainerID, 1)
 	}
+}
+
+// Cancel a buildJob
+func (buildJob *BuildJob) cancel() {
+	if buildJob.State == libremotebuild.JobRunning {
+		buildJob.cancelChan <- true
+		buildJob.Stop()
+	}
+
+	buildJob.State = libremotebuild.JobCancelled
 }

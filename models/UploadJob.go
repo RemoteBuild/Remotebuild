@@ -26,7 +26,7 @@ type UploadJob struct {
 
 	Type libremotebuild.UploadType
 
-	cancel chan bool `gorm:"-"` // Cancel chan
+	cancelChan chan bool `gorm:"-"` // Cancel chan
 }
 
 // UploadJobResult result of uploading a binary
@@ -37,7 +37,7 @@ type UploadJobResult struct {
 // NewUploadJob create new upload job
 func NewUploadJob(db *gorm.DB, uploadJob UploadJob) (*UploadJob, error) {
 	uploadJob.State = libremotebuild.JobWaiting
-	uploadJob.cancel = make(chan bool, 1)
+	uploadJob.cancelChan = make(chan bool, 1)
 
 	// Save Job into DB
 	err := db.Create(&uploadJob).Error
@@ -50,8 +50,8 @@ func NewUploadJob(db *gorm.DB, uploadJob UploadJob) (*UploadJob, error) {
 
 // Init the uploadJob
 func (uploadJob *UploadJob) Init() {
-	if uploadJob.cancel == nil {
-		uploadJob.cancel = make(chan bool, 1)
+	if uploadJob.cancelChan == nil {
+		uploadJob.cancelChan = make(chan bool, 1)
 	}
 }
 
@@ -121,7 +121,7 @@ func (uploadJob *UploadJob) uploadDmanager(buildResult BuildResult, argParser *A
 	}
 
 	// Upload file
-	_, err = uploadRequest.UploadFile(f, nil, uploadJob.cancel)
+	_, err = uploadRequest.UploadFile(f, nil, uploadJob.cancelChan)
 	if err != nil {
 		uploadJob.State = libremotebuild.JobFailed
 		return &UploadJobResult{
@@ -131,4 +131,13 @@ func (uploadJob *UploadJob) uploadDmanager(buildResult BuildResult, argParser *A
 
 	uploadJob.State = libremotebuild.JobDone
 	return nil
+}
+
+// Cancel a buildJob
+func (uploadJob *UploadJob) cancel() {
+	if uploadJob.State == libremotebuild.JobRunning {
+		uploadJob.cancelChan <- true
+	}
+
+	uploadJob.State = libremotebuild.JobCancelled
 }

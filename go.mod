@@ -2,6 +2,8 @@ module github.com/JojiiOfficial/Remotebuild
 
 go 1.14
 
+replace github.com/JojiiOfficial/LibRemotebuild v0.0.6 => /home/jojii/programming/go/src/RemoteBuildLib
+
 require (
 	github.com/DataManager-Go/libdatamanager v1.2.4
 	github.com/JojiiOfficial/LibRemotebuild v0.0.6
@@ -22,8 +24,8 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/sirupsen/logrus v1.6.0
 	golang.org/x/sync v0.0.0-20200317015054-43a5402ce75a // indirect
-	golang.org/x/sys v0.0.0-20200511232937-7e40ca221e25 // indirect
-	google.golang.org/genproto v0.0.0-20200511104702-f5ebc3bea380 // indirect
+	golang.org/x/sys v0.0.0-20200513112337-417ce2331b5c // indirect
+	google.golang.org/genproto v0.0.0-20200513103714-09dca8ec2884 // indirect
 	google.golang.org/grpc v1.29.1 // indirect
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 )

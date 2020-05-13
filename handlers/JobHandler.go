@@ -6,6 +6,7 @@ import (
 	libremotebuild "github.com/JojiiOfficial/LibRemotebuild"
 	"github.com/JojiiOfficial/Remotebuild/models"
 	"github.com/JojiiOfficial/Remotebuild/services"
+	docker "github.com/fsouza/go-dockerclient"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -97,7 +98,7 @@ func listJobs(handlerData HandlerData, w http.ResponseWriter, r *http.Request) {
 
 // cancelJob cancel a job
 func cancelJob(handlerData HandlerData, w http.ResponseWriter, r *http.Request) {
-	var request libremotebuild.CancelJobRequest
+	var request libremotebuild.JobRequest
 	// Read request
 
 	if !readRequestLimited(w, r, &request, handlerData.Config.Webserver.MaxRequestBodyLength) {
@@ -125,4 +126,48 @@ func cancelJob(handlerData HandlerData, w http.ResponseWriter, r *http.Request) 
 	// Remove from Db
 	handlerData.Db.Where("job_id=?", request.JobID).Delete(&services.JobQueueItem{})
 	log.Info("Cancelled Job ", request.JobID)
+}
+
+// get logs of a job
+func getLogs(handlerData HandlerData, w http.ResponseWriter, r *http.Request) {
+	var request libremotebuild.JobLogsRequest
+	// Read request
+
+	if !readRequestLimited(w, r, &request, handlerData.Config.Webserver.MaxRequestBodyLength) {
+		return
+	}
+
+	// find requested job
+	job := handlerData.JobService.Queue.FindJob(request.JobID)
+	if job == nil {
+		sendResponse(w, models.ResponseError, "Job not found", nil, http.StatusNotFound)
+		return
+	}
+
+	containerID := job.Job.BuildJob.ContainerID
+
+	// Check if container is running
+	if len(containerID) == 0 {
+		sendResponse(w, models.ResponseError, "No container running for job", nil, http.StatusUnprocessableEntity)
+		return
+	}
+
+	// If job found, set required header for "success"
+	w.Header().Set(models.HeaderStatus, "1")
+	w.Header().Set(models.HeaderStatusMessage, "")
+	w.WriteHeader(http.StatusOK)
+
+	err := job.Job.BuildJob.Logs(docker.LogsOptions{
+		Container:    containerID,
+		Stderr:       true,
+		Stdout:       true,
+		Follow:       false,
+		Since:        request.Since.Unix() + 1,
+		OutputStream: w,
+		ErrorStream:  w,
+	})
+
+	if err != nil {
+		log.Error(err)
+	}
 }

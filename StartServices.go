@@ -53,6 +53,9 @@ func awaitExit(httpServer *services.APIService, db *gorm.DB) {
 	// await os signal
 	<-signalChan
 
+	// Stop all jobs
+	jobService.Stop()
+
 	// Create a deadline for the await
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
 	defer cancel()

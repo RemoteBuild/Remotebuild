@@ -82,15 +82,10 @@ func (job *Job) putArgs() error {
 
 // Cancel Job
 func (job *Job) Cancel() {
+	job.BuildJob.cancel()
+	job.UploadJob.cancel()
+
 	job.Cancelled = true
-
-	go func() {
-		job.BuildJob.cancel <- true
-		job.UploadJob.cancel <- true
-	}()
-
-	job.BuildJob.State = libremotebuild.JobCancelled
-	job.UploadJob.State = libremotebuild.JobCancelled
 	job.Result = "Cancelled"
 }
 

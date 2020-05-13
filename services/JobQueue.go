@@ -14,15 +14,18 @@ import (
 
 // JobQueue a queue for jobs
 type JobQueue struct {
-	db   *gorm.DB
-	jobs []JobQueueItem
-	mx   sync.RWMutex
+	db      *gorm.DB
+	jobs    []JobQueueItem
+	mx      sync.RWMutex
+	stopped chan bool
+	currJob *JobQueueItem
 }
 
 // NewJobQueue create a new JobQueue
 func NewJobQueue(db *gorm.DB) *JobQueue {
 	queue := &JobQueue{
-		db: db,
+		db:      db,
+		stopped: make(chan bool, 1),
 	}
 
 	// Load Queue
@@ -116,7 +119,17 @@ func (jq *JobQueue) Run() {
 
 	for {
 		job := jq.nextJob()
+
 		jq.run(job)
+		jq.currJob = nil
+
+		// Only continue if not stopped
+		select {
+		case <-jq.stopped:
+			log.Info("Stopped JobQueue")
+			return
+		default:
+		}
 	}
 }
 
@@ -141,6 +154,7 @@ func (jq *JobQueue) run(jqi *JobQueueItem) {
 		return
 	}
 
+	jq.currJob = jqi
 	jqi.RunningSince = time.Now()
 
 	// Run job and log errors
@@ -164,6 +178,18 @@ func (jq *JobQueue) nextJob() *JobQueueItem {
 
 	jq.sortPosition()
 	return &jq.jobs[0]
+}
+
+// FindJob find job in queue
+func (jq *JobQueue) FindJob(jobID uint) *JobQueueItem {
+	// Find job in Queue slice
+	for j := range jq.jobs {
+		if jq.jobs[j].ID == jobID {
+			return &jq.jobs[j]
+		}
+	}
+
+	return nil
 }
 
 // RemoveJob remove item from jobQueue
@@ -226,4 +252,12 @@ func (jq *JobQueue) GetJobs() []JobQueueItem {
 	sort.Sort(SortByPosition(validJobs))
 
 	return validJobs
+}
+
+func (jq *JobQueue) stop() {
+	jq.stopped <- true
+
+	if jq.currJob != nil {
+		jq.currJob.Job.Cancel()
+	}
 }

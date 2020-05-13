@@ -100,6 +100,13 @@ var (
 			HandlerFunc: cancelJob,
 			HandlerType: sessionRequest,
 		},
+		Route{
+			Name:        "",
+			Pattern:     libremotebuild.EPJobLogs,
+			Method:      GetMethod,
+			HandlerFunc: getLogs,
+			HandlerType: sessionRequest,
+		},
 	}
 )
 

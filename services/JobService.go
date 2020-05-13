@@ -51,3 +51,9 @@ func (js *JobService) check() bool {
 
 	return success
 }
+
+// Stop the jobservice
+func (js *JobService) Stop() {
+	js.Queue.stop()
+
+}
