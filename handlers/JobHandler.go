@@ -100,28 +100,27 @@ func listJobs(handlerData HandlerData, w http.ResponseWriter, r *http.Request) {
 func cancelJob(handlerData HandlerData, w http.ResponseWriter, r *http.Request) {
 	var request libremotebuild.JobRequest
 	// Read request
-
 	if !readRequestLimited(w, r, &request, handlerData.Config.Webserver.MaxRequestBodyLength) {
 		return
 	}
 
-	// Remove from Queue
-	job := handlerData.JobService.Queue.RemoveJob(&services.JobQueueItem{JobID: request.JobID})
-
-	// Update state to cancelled
-	if job != nil {
-		// Cancel job
-		job.Job.Cancel()
-
-		if err := handlerData.Db.Save(job).Error; err != nil {
-			log.Info(err)
-		}
-
-		// send success
-		sendResponse(w, models.ResponseSuccess, "cancel successful", nil)
-	} else {
+	// Get Job
+	job := handlerData.JobService.Queue.FindJob(request.JobID)
+	if job == nil {
 		sendResponse(w, models.ResponseError, "no such job found", nil, http.StatusNotFound)
+		return
 	}
+
+	// Cancel job
+	job.Job.Cancel()
+	job.Deleted = true
+
+	if err := handlerData.Db.Save(job).Error; err != nil {
+		log.Info(err)
+	}
+
+	// send success
+	sendResponse(w, models.ResponseSuccess, "cancel successful", nil)
 
 	// Remove from Db
 	handlerData.Db.Where("job_id=?", request.JobID).Delete(&services.JobQueueItem{})
@@ -132,7 +131,6 @@ func cancelJob(handlerData HandlerData, w http.ResponseWriter, r *http.Request) 
 func getLogs(handlerData HandlerData, w http.ResponseWriter, r *http.Request) {
 	var request libremotebuild.JobLogsRequest
 	// Read request
-
 	if !readRequestLimited(w, r, &request, handlerData.Config.Webserver.MaxRequestBodyLength) {
 		return
 	}

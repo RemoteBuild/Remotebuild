@@ -143,7 +143,8 @@ func (jq *JobQueue) run(jqi *JobQueueItem) {
 			log.Warn(err)
 		}
 
-		jq.RemoveJob(jqi)
+		jqi.Deleted = true
+		jq.RemoveJob(jqi.ID)
 	}()
 
 	// Get Job
@@ -184,7 +185,7 @@ func (jq *JobQueue) nextJob() *JobQueueItem {
 func (jq *JobQueue) FindJob(jobID uint) *JobQueueItem {
 	// Find job in Queue slice
 	for j := range jq.jobs {
-		if jq.jobs[j].ID == jobID {
+		if jq.jobs[j].JobID == jobID {
 			return &jq.jobs[j]
 		}
 	}
@@ -193,34 +194,27 @@ func (jq *JobQueue) FindJob(jobID uint) *JobQueueItem {
 }
 
 // RemoveJob remove item from jobQueue
-func (jq *JobQueue) RemoveJob(item *JobQueueItem) *JobQueueItem {
+func (jq *JobQueue) RemoveJob(jobID uint) {
 	jq.mx.Lock()
 	defer jq.mx.Unlock()
 
-	item.Deleted = true
+	if jq.currJob != nil && jq.currJob.Job.ID == jobID {
+		jq.currJob = nil
+	}
 
 	i := -1
-	var retitem *JobQueueItem
 
 	// Find job in Queue slice
 	for j := range jq.jobs {
-		if jq.jobs[j].ID == item.JobID {
+		if jq.jobs[j].JobID == jobID {
 			i = j
-			retitem = &jq.jobs[j]
 			break
 		}
-	}
-
-	// exit if pos not found
-	if i == -1 {
-		return nil
 	}
 
 	// Remove
 	jq.jobs[len(jq.jobs)-1], jq.jobs[i] = jq.jobs[i], jq.jobs[len(jq.jobs)-1]
 	jq.jobs = jq.jobs[:len(jq.jobs)-1]
-
-	return retitem
 }
 
 // GetJobQueuePos position of job in the queue
