@@ -314,13 +314,14 @@ func (buildJob *BuildJob) cancel() {
 }
 
 // GetLogs of Buildjob
-func (buildJob *BuildJob) GetLogs(since int64, w io.Writer) error {
+func (buildJob *BuildJob) GetLogs(since int64, w io.Writer, tail string) error {
+	// Check build is running
 	if buildJob.State != libremotebuild.JobRunning || len(buildJob.ContainerID) == 0 {
 		return ErrJobNotRunning
 	}
 
-	// Get container logs
-	if err := buildJob.Logs(docker.LogsOptions{
+	// Build options
+	logOptions := docker.LogsOptions{
 		Container:    buildJob.ContainerID,
 		Stderr:       true,
 		Stdout:       true,
@@ -328,9 +329,12 @@ func (buildJob *BuildJob) GetLogs(since int64, w io.Writer) error {
 		Since:        since,
 		OutputStream: w,
 		ErrorStream:  w,
-	}); err != nil {
-		return err
 	}
 
-	return nil
+	if len(tail) > 0 {
+		logOptions.Tail = tail
+	}
+
+	// Get container logs
+	return buildJob.Logs(logOptions)
 }

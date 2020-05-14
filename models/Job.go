@@ -17,20 +17,24 @@ import (
 type Job struct {
 	gorm.Model
 
+	// Buildjob
 	BuildJobID uint      `sql:"index"`
 	BuildJob   *BuildJob `gorm:"association_autoupdate:false;association_autocreate:false"`
 
+	// UploadJob
 	UploadJobID uint       `sql:"index"`
 	UploadJob   *UploadJob `gorm:"association_autoupdate:false;association_autocreate:false"`
 
-	DataDir   string // Shared dir containing build files
-	Result    string
-	Cancelled bool `gorm:"-"`
+	DataDir  string // Shared dir containing build files
+	Result   string // Message of an exited job
+	LastLogs string // Latest logs
+	Argdata  string `grom:"type:jsonb"`
 
-	Args    map[string]string `gorm:"-"` // Envars for Dockerimage
-	Argdata string            `grom:"type:jsonb"`
-
-	LastSince int64 `gorm:"-"`
+	Args       map[string]string `gorm:"-"` // Envars for Dockerimage
+	db         *gorm.DB          `gorm:"-"`
+	Cancelled  bool              `gorm:"-"`
+	LastSince  int64             `gorm:"-"`
+	cancelChan chan struct{}     `gorm:"-"`
 }
 
 // NewJob create a new job
@@ -43,8 +47,10 @@ func NewJob(db *gorm.DB, buildJob BuildJob, uploadJob UploadJob, args map[string
 	}
 
 	job := &Job{
-		DataDir: path,
-		Args:    args,
+		DataDir:    path,
+		Args:       args,
+		db:         db,
+		cancelChan: make(chan struct{}, 1),
 	}
 
 	job.putArgs()
@@ -72,6 +78,23 @@ func NewJob(db *gorm.DB, buildJob BuildJob, uploadJob UploadJob, args map[string
 	return job, nil
 }
 
+// Init Job
+func (job *Job) Init(db *gorm.DB) error {
+	// Init channel
+	if job.cancelChan == nil {
+		job.cancelChan = make(chan struct{}, 1)
+	}
+
+	// Set DB
+	job.db = db
+
+	if job.Args == nil {
+		// TODO load argdata
+	}
+
+	return nil
+}
+
 // Tranlate Args to Argdata
 func (job *Job) putArgs() error {
 	b, err := json.Marshal(job.Args)
@@ -85,19 +108,17 @@ func (job *Job) putArgs() error {
 }
 
 // Cancel Job
-func (job *Job) Cancel(db *gorm.DB) {
+func (job *Job) Cancel() {
 	// Cancle actions
+	job.cancelChan <- struct{}{}
 	job.BuildJob.cancel()
 	job.UploadJob.cancel()
 
 	// Update Job data
 	job.Cancelled = true
 	job.Result = "Cancelled"
-	job.Argdata = ""
 
-	// Save changes and
-	// delete job
-	db.Save(job)
+	job.cleanup()
 }
 
 // SetState set the state of a job
@@ -139,10 +160,20 @@ func (job *Job) Info() string {
 // Cleanup a job
 func (job *Job) cleanup() {
 	// Remove Data dir
-	err := os.RemoveAll(job.DataDir)
-	if err != nil {
+	if err := os.RemoveAll(job.DataDir); err != nil && !os.IsNotExist(err) {
 		log.Warn(err)
 	}
+
+	// Clean Argdata
+	job.Argdata = ""
+
+	// Save changes and
+	job.Save()
+}
+
+// Save job
+func (job *Job) Save() error {
+	return job.db.Save(job).Error
 }
 
 // Run a job
@@ -185,6 +216,7 @@ func (job *Job) Run() error {
 	}
 
 	log.Infof("Job %d done", job.ID)
+	job.Result = "Success"
 	return nil
 }
 
@@ -203,7 +235,7 @@ func (job *Job) GetLogs(requestTime time.Time, since int64, w io.Writer, checkAm
 
 	// Get docker container logs, if build is running
 	if job.BuildJob.State == libremotebuild.JobRunning {
-		return job.BuildJob.GetLogs(since, w)
+		return job.BuildJob.GetLogs(since, w, "")
 	}
 
 	// If upload job is running, just use "Uploading"

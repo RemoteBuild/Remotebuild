@@ -113,7 +113,7 @@ func cancelJob(handlerData HandlerData, w http.ResponseWriter, r *http.Request) 
 	}
 
 	// Cancel job
-	job.Job.Cancel(handlerData.Db)
+	job.Job.Cancel()
 	job.Deleted = true
 
 	if err := handlerData.Db.Save(job).Error; err != nil {
@@ -143,10 +143,8 @@ func getLogs(handlerData HandlerData, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	containerID := job.Job.BuildJob.ContainerID
-
 	// Check if container is running
-	if len(containerID) == 0 {
+	if len(job.Job.BuildJob.ContainerID) == 0 {
 		sendResponse(w, models.ResponseError, "No container running for job", nil, http.StatusUnprocessableEntity)
 		return
 	}

@@ -54,6 +54,13 @@ func (jq *JobQueue) Load() error {
 	var jobsToUse []JobQueueItem
 
 	for i := range jobs {
+		// Init Job
+		err := jobs[i].Job.Init(jq.db)
+		if err != nil {
+			log.Error(err)
+			continue
+		}
+
 		jobState := jobs[i].Job.GetState()
 
 		// Set running jobs to waiting
@@ -64,7 +71,6 @@ func (jq *JobQueue) Load() error {
 
 		// Ignore cancelled/failed/finished jobs
 		if jobState == libremotebuild.JobRunning || jobState == libremotebuild.JobWaiting {
-
 			jobsToUse = append(jobsToUse, jobs[i])
 		}
 	}
@@ -252,6 +258,6 @@ func (jq *JobQueue) stop() {
 	jq.stopped <- true
 
 	if jq.currJob != nil {
-		jq.currJob.Job.Cancel(jq.db)
+		jq.currJob.Job.Cancel()
 	}
 }
