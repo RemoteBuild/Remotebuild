@@ -2,10 +2,9 @@ module github.com/JojiiOfficial/Remotebuild
 
 go 1.14
 
-
 require (
 	github.com/DataManager-Go/libdatamanager v1.2.4
-	github.com/JojiiOfficial/LibRemotebuild v0.0.8
+	github.com/JojiiOfficial/LibRemotebuild v0.0.9
 	github.com/JojiiOfficial/configService v0.0.0-20200219132202-6e71512e2e28
 	github.com/JojiiOfficial/gaw v1.2.1
 	github.com/Microsoft/hcsshim v0.8.9 // indirect

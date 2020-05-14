@@ -2,11 +2,12 @@ package handlers
 
 import (
 	"net/http"
+	"strconv"
+	"time"
 
 	libremotebuild "github.com/JojiiOfficial/LibRemotebuild"
 	"github.com/JojiiOfficial/Remotebuild/models"
 	"github.com/JojiiOfficial/Remotebuild/services"
-	docker "github.com/fsouza/go-dockerclient"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -150,22 +151,15 @@ func getLogs(handlerData HandlerData, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	requestTime := time.Now()
+
 	// If job found, set required header for "success"
 	w.Header().Set(models.HeaderStatus, "1")
-	w.Header().Set(models.HeaderStatusMessage, "")
+	w.Header().Set(models.HeaderStatusMessage, strconv.FormatInt(requestTime.Unix(), 10))
 	w.WriteHeader(http.StatusOK)
 
-	err := job.Job.BuildJob.Logs(docker.LogsOptions{
-		Container:    containerID,
-		Stderr:       true,
-		Stdout:       true,
-		Follow:       false,
-		Since:        request.Since.Unix() + 1,
-		OutputStream: w,
-		ErrorStream:  w,
-	})
-
-	if err != nil {
+	// Send logs
+	if err := job.Job.GetLogs(requestTime, request.Since.Unix(), w, true); err != nil {
 		log.Error(err)
 	}
 }

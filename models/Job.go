@@ -2,8 +2,10 @@ package models
 
 import (
 	"encoding/json"
+	"io"
 	"os"
 	"path/filepath"
+	"time"
 
 	libremotebuild "github.com/JojiiOfficial/LibRemotebuild"
 	"github.com/JojiiOfficial/gaw"
@@ -27,6 +29,8 @@ type Job struct {
 
 	Args    map[string]string `gorm:"-"` // Envars for Dockerimage
 	Argdata string            `grom:"type:jsonb"`
+
+	LastSince int64 `gorm:"-"`
 }
 
 // NewJob create a new job
@@ -94,7 +98,6 @@ func (job *Job) Cancel(db *gorm.DB) {
 	// Save changes and
 	// delete job
 	db.Save(job)
-	db.Delete(job)
 }
 
 // SetState set the state of a job
@@ -183,4 +186,31 @@ func (job *Job) Run() error {
 
 	log.Infof("Job %d done", job.ID)
 	return nil
+}
+
+// GetLogs for job
+func (job *Job) GetLogs(requestTime time.Time, since int64, w io.Writer, checkAmbigious bool) error {
+	if checkAmbigious {
+		if since > 0 && job.LastSince >= since {
+			return nil
+		}
+		job.LastSince = requestTime.Unix()
+	}
+
+	if job.GetState() != libremotebuild.JobRunning {
+		return ErrJobNotRunning
+	}
+
+	// Get docker container logs, if build is running
+	if job.BuildJob.State == libremotebuild.JobRunning {
+		return job.BuildJob.GetLogs(since, w)
+	}
+
+	// If upload job is running, just use "Uploading"
+	if job.UploadJob.State == libremotebuild.JobRunning {
+		_, err := w.Write([]byte("Uploading"))
+		return err
+	}
+
+	return ErrNoLogsFound
 }

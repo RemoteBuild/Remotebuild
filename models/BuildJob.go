@@ -1,6 +1,7 @@
 package models
 
 import (
+	"io"
 	"io/ioutil"
 	"path/filepath"
 	"strings"
@@ -310,4 +311,26 @@ func (buildJob *BuildJob) cancel() {
 	}
 
 	buildJob.State = libremotebuild.JobCancelled
+}
+
+// GetLogs of Buildjob
+func (buildJob *BuildJob) GetLogs(since int64, w io.Writer) error {
+	if buildJob.State != libremotebuild.JobRunning || len(buildJob.ContainerID) == 0 {
+		return ErrJobNotRunning
+	}
+
+	// Get container logs
+	if err := buildJob.Logs(docker.LogsOptions{
+		Container:    buildJob.ContainerID,
+		Stderr:       true,
+		Stdout:       true,
+		Follow:       false,
+		Since:        since,
+		OutputStream: w,
+		ErrorStream:  w,
+	}); err != nil {
+		return err
+	}
+
+	return nil
 }
