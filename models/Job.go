@@ -126,12 +126,7 @@ func (job *Job) Cancel() {
 
 // SetState set the state of a job
 func (job *Job) SetState(newState libremotebuild.JobState) {
-	// If build job is not done, set its job
-	if job.BuildJob.State != libremotebuild.JobDone {
-		job.BuildJob.State = newState
-		return
-	}
-
+	job.BuildJob.State = newState
 	job.UploadJob.State = newState
 }
 
@@ -222,7 +217,7 @@ func (job *Job) Run() error {
 	buildResult := job.BuildJob.Run(job.DataDir, argParser)
 	if buildResult.Error != nil {
 		if buildResult.Error != ErrorJobCancelled {
-			job.BuildJob.State = libremotebuild.JobFailed
+			job.SetState(libremotebuild.JobFailed)
 			log.Info("Build Failed: ", buildResult.Error.Error())
 		}
 
@@ -237,9 +232,10 @@ func (job *Job) Run() error {
 	uploadResult := job.UploadJob.Run(*buildResult, argParser)
 	if uploadResult != nil && uploadResult.Error != nil {
 		if uploadResult.Error != ErrorJobCancelled {
-			job.UploadJob.State = libremotebuild.JobFailed
+			job.SetState(libremotebuild.JobFailed)
 			log.Info("Upload Failed: ", uploadResult.Error.Error())
 		}
+
 		return uploadResult.Error
 	}
 

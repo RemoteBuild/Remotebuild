@@ -115,7 +115,6 @@ func (buildJob *BuildJob) build(dataDir string, argParser *ArgParser) *BuildResu
 	// Parse args
 	envars, err := argParser.ParseEnvars()
 	if err != nil {
-		buildJob.State = libremotebuild.JobFailed
 		return &BuildResult{
 			Error: err,
 		}
@@ -123,7 +122,6 @@ func (buildJob *BuildJob) build(dataDir string, argParser *ArgParser) *BuildResu
 
 	// Pull image if neccessary
 	if err := buildJob.pullImageIfNeeded(buildJob.Image); err != nil {
-		buildJob.State = libremotebuild.JobFailed
 		return &BuildResult{
 			Error: err,
 		}
@@ -132,7 +130,6 @@ func (buildJob *BuildJob) build(dataDir string, argParser *ArgParser) *BuildResu
 	// Create container
 	container, err := buildJob.getContainer(dataDir, envars)
 	if err != nil {
-		buildJob.State = libremotebuild.JobFailed
 		return &BuildResult{
 			Error: err,
 		}
@@ -140,7 +137,6 @@ func (buildJob *BuildJob) build(dataDir string, argParser *ArgParser) *BuildResu
 
 	// Start container
 	if err = buildJob.StartContainer(container.ID, &docker.HostConfig{}); err != nil {
-		buildJob.State = libremotebuild.JobFailed
 		return &BuildResult{
 			Error: err,
 		}
@@ -149,7 +145,6 @@ func (buildJob *BuildJob) build(dataDir string, argParser *ArgParser) *BuildResu
 	// Wait until building is done
 	n, err := buildJob.WaitContainer(container.ID)
 	if err != nil {
-		buildJob.State = libremotebuild.JobFailed
 		return &BuildResult{
 			Error: err,
 		}
@@ -157,7 +152,6 @@ func (buildJob *BuildJob) build(dataDir string, argParser *ArgParser) *BuildResu
 
 	// Check container exit code
 	if n != 0 {
-		buildJob.State = libremotebuild.JobFailed
 		return &BuildResult{
 			Error: ErrorNonZeroExit,
 		}
@@ -172,7 +166,6 @@ func (buildJob *BuildJob) build(dataDir string, argParser *ArgParser) *BuildResu
 
 		archive, err = buildJob.findBuiltPackage(dataDir)
 		if err != nil {
-			buildJob.State = libremotebuild.JobFailed
 			return &BuildResult{
 				Error: err,
 			}
