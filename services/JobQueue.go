@@ -252,6 +252,6 @@ func (jq *JobQueue) stop() {
 	jq.stopped <- true
 
 	if jq.currJob != nil {
-		jq.currJob.Job.Cancel()
+		jq.currJob.Job.Cancel(jq.db)
 	}
 }

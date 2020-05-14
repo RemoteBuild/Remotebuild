@@ -288,7 +288,7 @@ func (buildJob *BuildJob) pullImageIfNeeded(image string) error {
 	})
 
 	if err == nil {
-		log.Debug("Successful pulled Image ", image)
+		log.Debug("Successfully pulled Image ", image)
 	}
 
 	return err

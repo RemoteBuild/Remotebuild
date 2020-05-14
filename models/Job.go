@@ -81,12 +81,20 @@ func (job *Job) putArgs() error {
 }
 
 // Cancel Job
-func (job *Job) Cancel() {
+func (job *Job) Cancel(db *gorm.DB) {
+	// Cancle actions
 	job.BuildJob.cancel()
 	job.UploadJob.cancel()
 
+	// Update Job data
 	job.Cancelled = true
 	job.Result = "Cancelled"
+	job.Argdata = ""
+
+	// Save changes and
+	// delete job
+	db.Save(job)
+	db.Delete(job)
 }
 
 // SetState set the state of a job

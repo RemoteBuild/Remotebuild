@@ -112,7 +112,7 @@ func cancelJob(handlerData HandlerData, w http.ResponseWriter, r *http.Request) 
 	}
 
 	// Cancel job
-	job.Job.Cancel()
+	job.Job.Cancel(handlerData.Db)
 	job.Deleted = true
 
 	if err := handlerData.Db.Save(job).Error; err != nil {
