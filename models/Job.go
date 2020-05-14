@@ -1,7 +1,9 @@
 package models
 
 import (
+	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -29,12 +31,13 @@ type Job struct {
 	Result   string // Message of an exited job
 	LastLogs string // Latest logs
 	Argdata  string `grom:"type:jsonb"`
+	Info     string
 
-	Args       map[string]string `gorm:"-"` // Envars for Dockerimage
-	db         *gorm.DB          `gorm:"-"`
-	Cancelled  bool              `gorm:"-"`
-	LastSince  int64             `gorm:"-"`
-	cancelChan chan struct{}     `gorm:"-"`
+	Args           map[string]string `gorm:"-"` // Envars for Dockerimage
+	*gorm.DB       `gorm:"-"`
+	Cancelled      bool          `gorm:"-"`
+	LastSince      int64         `gorm:"-"`
+	stopLogUpdater chan struct{} `gorm:"-"`
 }
 
 // NewJob create a new job
@@ -47,10 +50,10 @@ func NewJob(db *gorm.DB, buildJob BuildJob, uploadJob UploadJob, args map[string
 	}
 
 	job := &Job{
-		DataDir:    path,
-		Args:       args,
-		db:         db,
-		cancelChan: make(chan struct{}, 1),
+		DataDir:        path,
+		Args:           args,
+		DB:             db,
+		stopLogUpdater: make(chan struct{}, 1),
 	}
 
 	job.putArgs()
@@ -81,12 +84,12 @@ func NewJob(db *gorm.DB, buildJob BuildJob, uploadJob UploadJob, args map[string
 // Init Job
 func (job *Job) Init(db *gorm.DB) error {
 	// Init channel
-	if job.cancelChan == nil {
-		job.cancelChan = make(chan struct{}, 1)
+	if job.stopLogUpdater == nil {
+		job.stopLogUpdater = make(chan struct{}, 1)
 	}
 
 	// Set DB
-	job.db = db
+	job.DB = db
 
 	if job.Args == nil {
 		// TODO load argdata
@@ -110,7 +113,7 @@ func (job *Job) putArgs() error {
 // Cancel Job
 func (job *Job) Cancel() {
 	// Cancle actions
-	job.cancelChan <- struct{}{}
+	job.stopLogUpdater <- struct{}{}
 	job.BuildJob.cancel()
 	job.UploadJob.cancel()
 
@@ -143,15 +146,20 @@ func (job *Job) GetState() libremotebuild.JobState {
 	return job.UploadJob.State
 }
 
-// Info for job
-func (job *Job) Info() string {
+// GetInfo for job
+func (job *Job) GetInfo() string {
+	if len(job.Info) > 0 {
+		return job.Info
+	}
+
 	if job.BuildJob == nil {
 		return "<noInfo>"
 	}
 
 	switch job.BuildJob.Type {
 	case libremotebuild.JobAUR:
-		return "AUR: " + job.Args[libremotebuild.AURPackage]
+		job.Info = "AUR: " + job.Args[libremotebuild.AURPackage]
+		return job.Info
 	}
 
 	return "<noInfo>"
@@ -172,8 +180,19 @@ func (job *Job) cleanup() {
 }
 
 // Save job
-func (job *Job) Save() error {
-	return job.db.Save(job).Error
+func (job *Job) Save() (err error) {
+	// Save Buildjob
+	if err = job.DB.Save(job.BuildJob).Error; err != nil {
+		return err
+	}
+
+	// Save uploadjob
+	if err = job.DB.Save(job.UploadJob).Error; err != nil {
+		return err
+	}
+
+	// Save actual job
+	return job.DB.Save(job).Error
 }
 
 // Run a job
@@ -184,8 +203,17 @@ func (job *Job) Run() error {
 	}
 	log.Debug("Run job ", job.ID)
 
+	// Set Jobs info
+	job.GetInfo()
+	job.Save()
+
 	// Cleanup data at the end
-	defer job.cleanup()
+	defer func() {
+		job.stopLogUpdater <- struct{}{}
+		job.cleanup()
+	}()
+
+	go job.runLogUpdater()
 
 	// New argParser
 	argParser := NewArgParser(job.Args, job.BuildJob.Type)
@@ -244,5 +272,66 @@ func (job *Job) GetLogs(requestTime time.Time, since int64, w io.Writer, checkAm
 		return err
 	}
 
+	fmt.Println("no logs")
+
 	return ErrNoLogsFound
+}
+
+func (job *Job) runLogUpdater() {
+	wasJobRunning := false
+
+	for {
+		// Exit on stopLogUpdater
+		select {
+		case <-job.stopLogUpdater:
+			return
+		default:
+		}
+
+		// Exit if Buildjob is not running/waiting
+		if job.BuildJob.State != libremotebuild.JobRunning &&
+			job.BuildJob.State != libremotebuild.JobWaiting {
+			return
+		}
+
+		bb := &bytes.Buffer{}
+
+		// Get latest 20 log entries
+		if err := job.BuildJob.GetLogs(0, bb, "20"); err != nil {
+			if !wasJobRunning && err == ErrJobNotRunning {
+				continue
+			}
+
+			log.Error(err)
+			return
+		}
+
+		wasJobRunning = true
+
+		// Set new lastlog
+		if len(bb.Bytes()) > 0 {
+			logs := bb.String()
+
+			if len(logs) > 20 && len(job.LastLogs) > 20 {
+				job.LastLogs = logs
+			} else {
+				job.LastLogs += logs
+			}
+
+			// Save job to DB
+			job.DB.Model(job).Update("last_logs", job.LastLogs)
+		}
+
+	}
+}
+
+// ToJobInfo return JobInfo by job
+func (job Job) ToJobInfo() libremotebuild.JobInfo {
+	return libremotebuild.JobInfo{
+		ID:         job.ID,
+		Info:       job.GetInfo(),
+		BuildType:  job.BuildJob.Type,
+		Status:     job.GetState(),
+		UploadType: job.UploadJob.Type,
+	}
 }

@@ -1,7 +1,6 @@
 package services
 
 import (
-	"fmt"
 	"sort"
 	"sync"
 	"time"
@@ -75,13 +74,8 @@ func (jq *JobQueue) Load() error {
 		}
 	}
 
-	jq.mx.Lock()
-	defer jq.mx.Unlock()
-
-	numJobs := uint(len(jobsToUse))
-
 	jq.jobs = jobsToUse
-	log.Infof("Loaded %d Jobs from old queue", numJobs)
+	log.Infof("Loaded %d Jobs from old queue", len(jobsToUse))
 	return nil
 }
 
@@ -124,7 +118,7 @@ func (jq *JobQueue) Run() {
 	log.Info("Starting JobQueue")
 
 	for {
-		job := jq.nextJob()
+		job := jq.getNextJob()
 
 		jq.run(job)
 		jq.currJob = nil
@@ -154,9 +148,7 @@ func (jq *JobQueue) run(jqi *JobQueueItem) {
 	}()
 
 	// Get Job
-	err := jqi.Reload(jq.db)
-	if err != nil {
-		fmt.Println("run reload")
+	if err := jqi.Load(jq.db); err != nil {
 		log.Error(err)
 		return
 	}
@@ -178,7 +170,7 @@ func (jq *JobQueue) sortPosition() {
 	sort.Sort(SortByPosition(jq.jobs))
 }
 
-func (jq *JobQueue) nextJob() *JobQueueItem {
+func (jq *JobQueue) getNextJob() *JobQueueItem {
 	for len(jq.jobs) == 0 {
 		time.Sleep(1 * time.Second)
 	}
@@ -201,9 +193,6 @@ func (jq *JobQueue) FindJob(jobID uint) *JobQueueItem {
 
 // RemoveJob remove item from jobQueue
 func (jq *JobQueue) RemoveJob(jobID uint) {
-	jq.mx.Lock()
-	defer jq.mx.Unlock()
-
 	if jq.currJob != nil && jq.currJob.Job.ID == jobID {
 		jq.currJob = nil
 	}
@@ -218,7 +207,10 @@ func (jq *JobQueue) RemoveJob(jobID uint) {
 		}
 	}
 
-	// Remove
+	jq.mx.Lock()
+	defer jq.mx.Unlock()
+
+	// Remove job from actual slice
 	jq.jobs[len(jq.jobs)-1], jq.jobs[i] = jq.jobs[i], jq.jobs[len(jq.jobs)-1]
 	jq.jobs = jq.jobs[:len(jq.jobs)-1]
 }
@@ -238,16 +230,17 @@ func (jq *JobQueue) GetJobQueuePos(jiq *JobQueueItem) int {
 
 // GetJobs return jobs in queue
 func (jq *JobQueue) GetJobs() []JobQueueItem {
-	jq.mx.Lock()
-	defer jq.mx.Unlock()
-
 	var validJobs []JobQueueItem
 
+	// Build slice with non-deleted jobs
 	for i := range jq.jobs {
 		if !jq.jobs[i].Deleted {
 			validJobs = append(validJobs, jq.jobs[i])
 		}
 	}
+
+	jq.mx.Lock()
+	defer jq.mx.Unlock()
 
 	sort.Sort(SortByPosition(validJobs))
 

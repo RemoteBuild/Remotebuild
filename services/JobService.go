@@ -9,7 +9,7 @@ import (
 
 // JobService managing jobs
 type JobService struct {
-	db     *gorm.DB
+	*gorm.DB
 	config *models.Config
 
 	Queue *JobQueue
@@ -18,7 +18,7 @@ type JobService struct {
 // NewJobService create a new jobservice
 func NewJobService(config *models.Config, db *gorm.DB) *JobService {
 	return &JobService{
-		db:     db,
+		DB:     db,
 		config: config,
 		Queue:  NewJobQueue(db),
 	}
@@ -56,4 +56,36 @@ func (js *JobService) check() bool {
 func (js *JobService) Stop() {
 	js.Queue.stop()
 
+}
+
+// GetOldJobs return n(limit) old jobs
+func (js *JobService) GetOldJobs(limit int) ([]models.Job, error) {
+	var jobs []models.Job
+
+	if err := js.Model(&models.Job{}).
+		Joins("left join build_jobs on build_jobs.id = jobs.build_job_id").
+		Joins("left join upload_jobs on upload_jobs.id = jobs.upload_job_id").
+		Preload("BuildJob").
+		Preload("UploadJob").
+		Where("build_jobs.state != 3 AND build_jobs.state != 0").
+		Where("upload_jobs.state != 3 AND upload_jobs.state != 0").
+		Order("jobs.id DESC").
+		Limit(limit).Find(&jobs).Error; err != nil {
+		return nil, err
+	}
+
+	return jobs, nil
+}
+
+// GetOldLogs get old logs for job
+func (js *JobService) GetOldLogs(jobID uint) (string, error) {
+	var job models.Job
+
+	// Get logs from DB
+	err := js.Select("last_logs").Where("id=?", jobID).Find(&job).Error
+	if err != nil {
+		return "", err
+	}
+
+	return job.LastLogs, nil
 }

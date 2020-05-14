@@ -8,6 +8,7 @@ import (
 	libremotebuild "github.com/JojiiOfficial/LibRemotebuild"
 	"github.com/JojiiOfficial/Remotebuild/models"
 	"github.com/JojiiOfficial/Remotebuild/services"
+	"github.com/jinzhu/gorm"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -74,27 +75,34 @@ func listJobs(handlerData HandlerData, w http.ResponseWriter, r *http.Request) {
 
 	// Bulid JobInfos
 	for i, jobQueueItem := range jobs {
-		jobQueueItem.Reload(handlerData.Db)
+		jobQueueItem.Load(handlerData.Db)
 		job := jobQueueItem.Job
 
-		jobInfos[i] = libremotebuild.JobInfo{
-			ID:         job.ID,
-			Info:       job.Info(),
-			BuildType:  job.BuildJob.Type,
-			Position:   jobQueueItem.Position,
-			Status:     job.GetState(),
-			UploadType: job.UploadJob.Type,
-		}
+		jobInfos[i] = job.ToJobInfo()
+		jobInfos[i].Position = jobQueueItem.Position
 
 		if job.GetState() == libremotebuild.JobRunning {
 			jobInfos[i].RunningSince = jobQueueItem.RunningSince
 		}
 	}
 
-	// Send list
-	sendResponse(w, models.ResponseSuccess, "", libremotebuild.ListJobsResponse{
+	// Build response
+	resp := libremotebuild.ListJobsResponse{
 		Jobs: jobInfos,
-	})
+	}
+
+	// Append old jobs
+	oldJobs, err := handlerData.JobService.GetOldJobs(2)
+	if err != nil {
+		log.Warn(err)
+	} else {
+		for i := range oldJobs {
+			resp.Jobs = append(resp.Jobs, oldJobs[i].ToJobInfo())
+		}
+	}
+
+	// Send list
+	sendResponse(w, models.ResponseSuccess, "", resp)
 }
 
 // cancelJob cancel a job
@@ -116,7 +124,7 @@ func cancelJob(handlerData HandlerData, w http.ResponseWriter, r *http.Request) 
 	job.Job.Cancel()
 	job.Deleted = true
 
-	if err := handlerData.Db.Save(job).Error; err != nil {
+	if err := job.Job.Save().Error; err != nil {
 		log.Info(err)
 	}
 
@@ -136,28 +144,40 @@ func getLogs(handlerData HandlerData, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// find requested job
-	job := handlerData.JobService.Queue.FindJob(request.JobID)
-	if job == nil {
-		sendResponse(w, models.ResponseError, "Job not found", nil, http.StatusNotFound)
-		return
-	}
+	// Try getting requested runnig job
+	if job := handlerData.JobService.Queue.FindJob(request.JobID); job != nil {
+		// Check if container is running
+		if len(job.Job.BuildJob.ContainerID) == 0 {
+			sendResponse(w, models.ResponseError, "No container running for job", nil, http.StatusUnprocessableEntity)
+			return
+		}
 
-	// Check if container is running
-	if len(job.Job.BuildJob.ContainerID) == 0 {
-		sendResponse(w, models.ResponseError, "No container running for job", nil, http.StatusUnprocessableEntity)
-		return
-	}
+		requestTime := time.Now()
 
-	requestTime := time.Now()
+		// If job found, set required header for "success"
+		w.Header().Set(models.HeaderStatus, "1")
+		w.Header().Set(models.HeaderStatusMessage, strconv.FormatInt(requestTime.Unix(), 10))
+		w.WriteHeader(http.StatusOK)
 
-	// If job found, set required header for "success"
-	w.Header().Set(models.HeaderStatus, "1")
-	w.Header().Set(models.HeaderStatusMessage, strconv.FormatInt(requestTime.Unix(), 10))
-	w.WriteHeader(http.StatusOK)
+		// Send logs
+		if err := job.Job.GetLogs(requestTime, request.Since.Unix(), w, true); err != nil {
+			log.Error(err)
+		}
+	} else {
+		// If no runnig job with requested ID was found
+		logs, err := handlerData.JobService.GetOldLogs(request.JobID)
+		if err != nil {
+			if err == gorm.ErrRecordNotFound {
+				sendResponse(w, models.ResponseError, "Job not found", nil, http.StatusNotFound)
+				return
+			}
+		}
 
-	// Send logs
-	if err := job.Job.GetLogs(requestTime, request.Since.Unix(), w, true); err != nil {
-		log.Error(err)
+		// If job found, set required header for "success"
+		w.Header().Set(models.HeaderStatus, "1")
+		w.Header().Set(models.HeaderStatusMessage, "-1")
+		w.WriteHeader(http.StatusOK)
+
+		w.Write([]byte(logs))
 	}
 }

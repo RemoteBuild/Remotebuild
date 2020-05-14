@@ -17,8 +17,7 @@ type JobQueueItem struct {
 	Position uint // The position in the Queue
 
 	RunningSince time.Time `gorm:"-"`
-
-	Deleted bool `gorm:"-"`
+	Deleted      bool      `gorm:"-"`
 }
 
 // SortByPosition sort by JobQueueItem position
@@ -33,8 +32,8 @@ func (jqi JobQueueItem) TableName() string {
 	return "job_queue"
 }
 
-// Reload (re)load the item from Db
-func (jqi *JobQueueItem) Reload(db *gorm.DB) error {
+// Load JobQueueItem
+func (jqi *JobQueueItem) Load(db *gorm.DB) error {
 	var queueItem JobQueueItem
 	err := db.Model(&JobQueueItem{}).
 		Preload("Job.BuildJob").
