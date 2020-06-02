@@ -1,6 +1,8 @@
 package services
 
 import (
+	"errors"
+
 	libremotebuild "github.com/JojiiOfficial/LibRemotebuild"
 	"github.com/JojiiOfficial/Remotebuild/models"
 )
@@ -20,6 +22,12 @@ func NewContainerService(config *models.Config) *ContainerService {
 
 // GetContainer for a job
 func (cs *ContainerService) GetContainer(job libremotebuild.JobType) (string, error) {
+	// TODO implement auto upgrades for container
 
-	return "", nil
+	image, has := cs.Config.GetImage(job)
+	if !has {
+		return "", errors.New("Image not found")
+	}
+
+	return image, nil
 }
