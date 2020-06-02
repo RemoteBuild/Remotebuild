@@ -32,8 +32,9 @@ type BuildResult struct {
 }
 
 // NewBuildJob create new BuildJob
-func NewBuildJob(db *gorm.DB, buildJob BuildJob) (*BuildJob, error) {
+func NewBuildJob(db *gorm.DB, buildJob BuildJob, image string) (*BuildJob, error) {
 	buildJob.State = libremotebuild.JobWaiting
+	buildJob.Image = image
 	buildJob.cancelChan = make(chan bool, 1)
 
 	// Connect to docker
@@ -111,6 +112,7 @@ func (buildJob *BuildJob) connectDocker() error {
 	return err
 }
 
+// Build the package
 func (buildJob *BuildJob) build(dataDir string, argParser *ArgParser) *BuildResult {
 	// Parse args
 	envars, err := argParser.ParseEnvars()
@@ -182,6 +184,7 @@ func (buildJob *BuildJob) build(dataDir string, argParser *ArgParser) *BuildResu
 	}
 }
 
+// Find the built archive
 func (buildJob *BuildJob) getArchive(dir string, argParser *ArgParser) string {
 	var fileName string
 

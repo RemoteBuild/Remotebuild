@@ -7,6 +7,9 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// ContainerGetter get container for job
+type ContainerGetter func(jobType libremotebuild.JobType) (string, error)
+
 // JobService managing jobs
 type JobService struct {
 	*gorm.DB
@@ -16,11 +19,11 @@ type JobService struct {
 }
 
 // NewJobService create a new jobservice
-func NewJobService(config *models.Config, db *gorm.DB) *JobService {
+func NewJobService(config *models.Config, db *gorm.DB, getContainer ContainerGetter) *JobService {
 	return &JobService{
 		DB:     db,
 		config: config,
-		Queue:  NewJobQueue(db),
+		Queue:  NewJobQueue(db, getContainer),
 	}
 }
 

@@ -13,18 +13,20 @@ import (
 
 // JobQueue a queue for jobs
 type JobQueue struct {
-	db      *gorm.DB
-	jobs    []JobQueueItem
-	mx      sync.RWMutex
-	stopped chan bool
-	currJob *JobQueueItem
+	db           *gorm.DB
+	jobs         []JobQueueItem
+	mx           sync.RWMutex
+	stopped      chan bool
+	currJob      *JobQueueItem
+	getContainer ContainerGetter
 }
 
 // NewJobQueue create a new JobQueue
-func NewJobQueue(db *gorm.DB) *JobQueue {
+func NewJobQueue(db *gorm.DB, getContainer ContainerGetter) *JobQueue {
 	queue := &JobQueue{
-		db:      db,
-		stopped: make(chan bool, 1),
+		db:           db,
+		getContainer: getContainer,
+		stopped:      make(chan bool, 1),
 	}
 
 	// Load Queue
@@ -77,6 +79,29 @@ func (jq *JobQueue) Load() error {
 	jq.jobs = jobsToUse
 	log.Infof("Loaded %d Jobs from old queue", len(jobsToUse))
 	return nil
+}
+
+// AddNewJob create job and add to queue
+func (jq *JobQueue) AddNewJob(db *gorm.DB, Type libremotebuild.JobType, uploadType libremotebuild.UploadType, args map[string]string) (*JobQueueItem, error) {
+	// Get image
+	image, err := jq.getContainer(Type)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create job
+	job, err := models.NewJob(db, image, models.BuildJob{
+		Type: Type,
+	}, models.UploadJob{
+		Type: uploadType,
+	}, args)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// add job to queue
+	return jq.AddJob(job)
 }
 
 // AddJob to a jobqueue

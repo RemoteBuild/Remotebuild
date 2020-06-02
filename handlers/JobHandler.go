@@ -35,28 +35,8 @@ func addJob(handlerData HandlerData, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get image for build job
-	image, has := handlerData.Config.GetImage(request.Type)
-	if !has {
-		sendResponse(w, models.ResponseError, "no image available", nil, http.StatusNotFound)
-		return
-	}
-
-	// Create new job
-	job, err := models.NewJob(handlerData.Db, models.BuildJob{
-		Type:  request.Type,
-		Image: image,
-	}, models.UploadJob{
-		Type: request.UploadType,
-	}, request.Args)
-
-	if LogError(err) {
-		sendServerError(w)
-		return
-	}
-
 	// Add Job to queue
-	jqi, err := handlerData.JobService.Queue.AddJob(job)
+	jqi, err := handlerData.JobService.Queue.AddNewJob(handlerData.Db, request.Type, request.UploadType, request.Args)
 	if LogError(err) {
 		sendServerError(w)
 		return

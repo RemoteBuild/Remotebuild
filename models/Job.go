@@ -3,7 +3,6 @@ package models
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -41,7 +40,7 @@ type Job struct {
 }
 
 // NewJob create a new job
-func NewJob(db *gorm.DB, buildJob BuildJob, uploadJob UploadJob, args map[string]string) (*Job, error) {
+func NewJob(db *gorm.DB, image string, buildJob BuildJob, uploadJob UploadJob, args map[string]string) (*Job, error) {
 	// Create temporary path for storing build data
 	path := filepath.Join(os.TempDir(), "remotebuild_"+gaw.RandString(30))
 	err := os.MkdirAll(path, 0700)
@@ -59,7 +58,7 @@ func NewJob(db *gorm.DB, buildJob BuildJob, uploadJob UploadJob, args map[string
 	job.putArgs()
 
 	// Create BuildJob
-	bJob, err := NewBuildJob(db, buildJob)
+	bJob, err := NewBuildJob(db, buildJob, image)
 	if err != nil {
 		return nil, err
 	}
@@ -267,8 +266,6 @@ func (job *Job) GetLogs(requestTime time.Time, since int64, w io.Writer, checkAm
 		_, err := w.Write([]byte("Uploading"))
 		return err
 	}
-
-	fmt.Println("no logs")
 
 	return ErrNoLogsFound
 }

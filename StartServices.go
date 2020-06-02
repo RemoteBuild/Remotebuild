@@ -7,6 +7,7 @@ import (
 	"syscall"
 	"time"
 
+	libremotebuild "github.com/JojiiOfficial/LibRemotebuild"
 	"github.com/JojiiOfficial/Remotebuild/handlers"
 	"github.com/JojiiOfficial/Remotebuild/services"
 	"github.com/gorilla/mux"
@@ -17,16 +18,22 @@ import (
 
 // Services
 var (
-	apiService     *services.APIService     // Handle endpoints
-	jobService     *services.JobService     // Handle Jobs
-	cleanupService *services.CleanupService // Cleanup db stuff
+	apiService       *services.APIService       // Handle endpoints
+	jobService       *services.JobService       // Handle Jobs
+	cleanupService   *services.CleanupService   // Cleanup db stuff
+	containerService *services.ContainerService // Managing containers
 )
 
 func startAPI() {
 	log.Info("Starting version " + version)
 
+	// Create new container service
+	containerService = services.NewContainerService(config)
+
 	// Create and start the jobservice
-	jobService = services.NewJobService(config, db)
+	jobService = services.NewJobService(config, db, func(jobType libremotebuild.JobType) (string, error) {
+		return containerService.GetContainer(jobType)
+	})
 	jobService.Start()
 
 	// Create and start required services
