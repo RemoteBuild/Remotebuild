@@ -13,7 +13,9 @@ import (
 
 // JobQueue a queue for jobs
 type JobQueue struct {
-	db           *gorm.DB
+	db     *gorm.DB
+	config *models.Config
+
 	jobs         []JobQueueItem
 	mx           sync.RWMutex
 	stopped      chan bool
@@ -22,9 +24,10 @@ type JobQueue struct {
 }
 
 // NewJobQueue create a new JobQueue
-func NewJobQueue(db *gorm.DB, getContainer ContainerGetter) *JobQueue {
+func NewJobQueue(db *gorm.DB, config *models.Config, getContainer ContainerGetter) *JobQueue {
 	queue := &JobQueue{
 		db:           db,
+		config:       config,
 		getContainer: getContainer,
 		stopped:      make(chan bool, 1),
 	}
@@ -82,7 +85,7 @@ func (jq *JobQueue) Load() error {
 }
 
 // AddNewJob create job and add to queue
-func (jq *JobQueue) AddNewJob(db *gorm.DB, Type libremotebuild.JobType, uploadType libremotebuild.UploadType, args map[string]string) (*JobQueueItem, error) {
+func (jq *JobQueue) AddNewJob(db *gorm.DB, Type libremotebuild.JobType, uploadType libremotebuild.UploadType, args map[string]string, useCcache bool) (*JobQueueItem, error) {
 	// Get image
 	image, err := jq.getContainer(Type)
 	if err != nil {
@@ -90,11 +93,11 @@ func (jq *JobQueue) AddNewJob(db *gorm.DB, Type libremotebuild.JobType, uploadTy
 	}
 
 	// Create job
-	job, err := models.NewJob(db, image, models.BuildJob{
+	job, err := models.NewJob(db, jq.config, image, models.BuildJob{
 		Type: Type,
 	}, models.UploadJob{
 		Type: uploadType,
-	}, args)
+	}, args, useCcache)
 
 	if err != nil {
 		return nil, err
@@ -173,7 +176,7 @@ func (jq *JobQueue) run(jqi *JobQueueItem) {
 	}()
 
 	// Get Job
-	if err := jqi.Load(jq.db); err != nil {
+	if err := jqi.Load(jq.db, jq.config); err != nil {
 		log.Error(err)
 		return
 	}

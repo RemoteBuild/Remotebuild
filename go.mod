@@ -14,16 +14,16 @@ require (
 	github.com/containerd/continuity v0.0.0-20200413184840-d3ef23f19fbb // indirect
 	github.com/fatih/color v1.9.0
 	github.com/fsouza/go-dockerclient v1.6.5
-	github.com/golang/protobuf v1.4.1 // indirect
+	github.com/golang/protobuf v1.4.2 // indirect
 	github.com/gorilla/mux v1.7.4
 	github.com/jinzhu/gorm v1.9.12
-	github.com/lib/pq v1.5.2 // indirect
+	github.com/lib/pq v1.6.0 // indirect
 	github.com/mattn/go-colorable v0.1.6 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/sirupsen/logrus v1.6.0
 	golang.org/x/sync v0.0.0-20200317015054-43a5402ce75a // indirect
-	golang.org/x/sys v0.0.0-20200513112337-417ce2331b5c // indirect
-	google.golang.org/genproto v0.0.0-20200513103714-09dca8ec2884 // indirect
+	golang.org/x/sys v0.0.0-20200602225109-6fdc65e7d980 // indirect
+	google.golang.org/genproto v0.0.0-20200603110839-e855014d5736 // indirect
 	google.golang.org/grpc v1.29.1 // indirect
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 )

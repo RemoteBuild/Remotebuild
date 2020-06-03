@@ -36,7 +36,7 @@ func addJob(handlerData HandlerData, w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Add Job to queue
-	jqi, err := handlerData.JobService.Queue.AddNewJob(handlerData.Db, request.Type, request.UploadType, request.Args)
+	jqi, err := handlerData.JobService.Queue.AddNewJob(handlerData.Db, request.Type, request.UploadType, request.Args, (!request.DisableCcache))
 	if LogError(err) {
 		sendServerError(w)
 		return
@@ -55,7 +55,7 @@ func listJobs(handlerData HandlerData, w http.ResponseWriter, r *http.Request) {
 
 	// Bulid JobInfos
 	for i, jobQueueItem := range jobs {
-		jobQueueItem.Load(handlerData.Db)
+		jobQueueItem.Load(handlerData.Db, handlerData.Config)
 		job := jobQueueItem.Job
 
 		jobInfos[i] = job.ToJobInfo()

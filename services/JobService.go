@@ -23,7 +23,7 @@ func NewJobService(config *models.Config, db *gorm.DB, getContainer ContainerGet
 	return &JobService{
 		DB:     db,
 		config: config,
-		Queue:  NewJobQueue(db, getContainer),
+		Queue:  NewJobQueue(db, config, getContainer),
 	}
 }
 

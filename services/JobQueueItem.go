@@ -33,7 +33,7 @@ func (jqi JobQueueItem) TableName() string {
 }
 
 // Load JobQueueItem
-func (jqi *JobQueueItem) Load(db *gorm.DB) error {
+func (jqi *JobQueueItem) Load(db *gorm.DB, config *models.Config) error {
 	var queueItem JobQueueItem
 	err := db.Model(&JobQueueItem{}).
 		Preload("Job.BuildJob").
@@ -46,6 +46,7 @@ func (jqi *JobQueueItem) Load(db *gorm.DB) error {
 
 	if jqi.Job.BuildJob == nil {
 		jqi.Job.BuildJob = queueItem.Job.BuildJob
+		jqi.Job.BuildJob.Config = config
 	}
 
 	if jqi.Job.UploadJob == nil {

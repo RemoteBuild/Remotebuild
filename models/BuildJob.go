@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"io"
 	"io/ioutil"
 	"path/filepath"
@@ -19,10 +20,12 @@ type BuildJob struct {
 	State libremotebuild.JobState // Build state
 	Type  libremotebuild.JobType  // Type of job
 
-	Image string // Dockerimage to run
+	Image     string // Dockerimage to run
+	UseCcache bool   // use ccahe to improve build speed
 
 	cancelChan  chan bool `gorm:"-"` // Cancel chan
 	ContainerID string    `gorm:"-"`
+	Config      *Config   `gorm:"-"`
 }
 
 // BuildResult result of a bulid
@@ -32,9 +35,11 @@ type BuildResult struct {
 }
 
 // NewBuildJob create new BuildJob
-func NewBuildJob(db *gorm.DB, buildJob BuildJob, image string) (*BuildJob, error) {
+func NewBuildJob(db *gorm.DB, config *Config, buildJob BuildJob, image string, useCcache bool) (*BuildJob, error) {
 	buildJob.State = libremotebuild.JobWaiting
 	buildJob.Image = image
+	buildJob.Config = config
+	buildJob.UseCcache = useCcache && config.IsCcacheDirValid()
 	buildJob.cancelChan = make(chan bool, 1)
 
 	// Connect to docker
@@ -218,6 +223,37 @@ func (buildJob *BuildJob) findBuiltPackage(dir string) (string, error) {
 
 // Create build container
 func (buildJob *BuildJob) getContainer(dataDir string, env []string) (*docker.Container, error) {
+	// Set CCACHE environment variables
+	if buildJob.UseCcache {
+		env = append(env, "USE_CCACHE=true")
+		env = append(env, "CCACHE_DIR=/ccache")
+		env = append(env, fmt.Sprintf("CCACHE_MAXSIZE=%dG", buildJob.Config.Server.Ccache.MaxSize))
+	}
+
+	// Mount /home/builduser on host /tmp/remotebuild_XXXXXXXXXX
+	mounts := []docker.HostMount{{
+		Source: dataDir,
+		Target: "/home/builduser",
+		BindOptions: &docker.BindOptions{
+			Propagation: "rprivate",
+		},
+		ReadOnly: false,
+		Type:     "bind",
+	}}
+
+	// Monut host ccache dir if ccache is used
+	if buildJob.UseCcache {
+		mounts = append(mounts, docker.HostMount{
+			Source:   buildJob.Config.Server.Ccache.Dir,
+			Target:   "/ccache",
+			Type:     "bind",
+			ReadOnly: false,
+			BindOptions: &docker.BindOptions{
+				Propagation: "rprivate",
+			},
+		})
+	}
+
 	// Create container
 	container, err := buildJob.CreateContainer(docker.CreateContainerOptions{
 		Config: &docker.Config{
@@ -225,17 +261,7 @@ func (buildJob *BuildJob) getContainer(dataDir string, env []string) (*docker.Co
 			Env:   env,
 		},
 		HostConfig: &docker.HostConfig{
-			// Mount /home/builduser on host /tmp/remotebuild_XXXXXXXXXX
-			Mounts: []docker.HostMount{{
-				Source: dataDir,
-				BindOptions: &docker.BindOptions{
-					Propagation: "rprivate",
-				},
-				ReadOnly: false,
-				Type:     "bind",
-				Target:   "/home/builduser",
-			}},
-
+			Mounts: mounts,
 			// Autodelete container afterwards
 			AutoRemove: true,
 		},

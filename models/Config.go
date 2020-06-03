@@ -34,6 +34,12 @@ type configServer struct {
 	Jobs                      jobconfig
 	AllowRegistration         bool          `default:"false"`
 	DeleteUnusedSessionsAfter time.Duration `default:"10m"`
+	Ccache                    ccacheConfig
+}
+
+type ccacheConfig struct {
+	Dir     string
+	MaxSize int
 }
 
 type jobconfig struct {
@@ -184,6 +190,13 @@ func (config *Config) Check() bool {
 		return false
 	}
 
+	// Print Warning if ccache is not set up properly
+	if !config.IsCcacheDirValid() {
+		log.Warn("Ccache directory is not valid")
+	} else {
+		log.Info("Ccache set up correctly! Using ", config.Server.Ccache.MaxSize, "G of diskspace for ccache")
+	}
+
 	return true
 }
 
@@ -203,4 +216,22 @@ func DirExists(path string) bool {
 func (config Config) GetImage(buildType libremotebuild.JobType) (string, bool) {
 	v, ok := config.Server.Jobs.Images[buildType.String()]
 	return v, ok
+}
+
+// IsCcacheDirValid return true if cache is valid
+func (config Config) IsCcacheDirValid() bool {
+	if config.Server.Ccache.MaxSize == 0 {
+		return false
+	}
+
+	// Try to create the folder if dir is set
+	if len(config.Server.Ccache.Dir) > 0 && !gaw.FileExists(config.Server.Ccache.Dir) {
+		err := os.MkdirAll(config.Server.Ccache.Dir, 0700)
+		if err != nil {
+			log.Warn("Can't create cacche dir:", err)
+			return false
+		}
+	}
+
+	return len(config.Server.Ccache.Dir) > 0 && gaw.FileExists(config.Server.Ccache.Dir)
 }

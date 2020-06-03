@@ -37,10 +37,11 @@ type Job struct {
 	Cancelled      bool          `gorm:"-"`
 	LastSince      int64         `gorm:"-"`
 	stopLogUpdater chan struct{} `gorm:"-"`
+	config         *Config       `gorm:"-"`
 }
 
 // NewJob create a new job
-func NewJob(db *gorm.DB, image string, buildJob BuildJob, uploadJob UploadJob, args map[string]string) (*Job, error) {
+func NewJob(db *gorm.DB, config *Config, image string, buildJob BuildJob, uploadJob UploadJob, args map[string]string, useCcache bool) (*Job, error) {
 	// Create temporary path for storing build data
 	path := filepath.Join(os.TempDir(), "remotebuild_"+gaw.RandString(30))
 	err := os.MkdirAll(path, 0700)
@@ -58,7 +59,7 @@ func NewJob(db *gorm.DB, image string, buildJob BuildJob, uploadJob UploadJob, a
 	job.putArgs()
 
 	// Create BuildJob
-	bJob, err := NewBuildJob(db, buildJob, image)
+	bJob, err := NewBuildJob(db, config, buildJob, image, useCcache)
 	if err != nil {
 		return nil, err
 	}
