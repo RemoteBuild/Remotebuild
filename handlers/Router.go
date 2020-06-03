@@ -107,6 +107,22 @@ var (
 			HandlerFunc: getLogs,
 			HandlerType: sessionRequest,
 		},
+
+		// Ccache
+		Route{
+			Name:        "Clear ccache",
+			Pattern:     libremotebuild.EPCcacheClear,
+			Method:      POSTMethod,
+			HandlerFunc: clearCcache,
+			HandlerType: sessionRequest,
+		},
+		Route{
+			Name:        "Query ccache",
+			Pattern:     libremotebuild.EPCcacheStats,
+			Method:      GetMethod,
+			HandlerFunc: ccacheStats,
+			HandlerType: sessionRequest,
+		},
 	}
 )
 
