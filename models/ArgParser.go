@@ -14,9 +14,10 @@ var (
 
 // DataManagerArgs data for datamanager
 type DataManagerArgs struct {
-	Username string
-	Host     string
-	Token    string
+	Username  string
+	Host      string
+	Token     string
+	Namespace string
 }
 
 // ArgParser parse job args
@@ -75,11 +76,13 @@ func (argParser *ArgParser) GetDManagerData() *DataManagerArgs {
 	host := argParser.args[libremotebuild.DMHost]
 	username := argParser.args[libremotebuild.DMUser]
 	token := argParser.args[libremotebuild.DMToken]
+	namespace := argParser.args[libremotebuild.DMNamespace]
 
 	return &DataManagerArgs{
-		Host:     host,
-		Username: username,
-		Token:    token,
+		Host:      host,
+		Username:  username,
+		Token:     token,
+		Namespace: namespace,
 	}
 }
 
@@ -90,4 +93,14 @@ func argsToEnvs(args map[string]string) []string {
 		s = append(s, k+"="+v)
 	}
 	return s
+}
+
+// GetDManagerNamespace return the namespace according to the dmanager args
+func (argParser *ArgParser) GetDManagerNamespace() string {
+	return argParser.args[libremotebuild.DMNamespace]
+}
+
+// HasNamespace return true if namespace is set
+func (argParser *ArgParser) HasNamespace() bool {
+	return len(argParser.GetDManagerNamespace()) > 0
 }

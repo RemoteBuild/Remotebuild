@@ -102,14 +102,21 @@ func (uploadJob *UploadJob) uploadDmanager(buildResult BuildResult, argParser *A
 
 	_, filename := filepath.Split(buildResult.Archive)
 
+	attributes := libdatamanager.FileAttributes{
+		Groups: []string{"AURpackage"},
+	}
+
+	// Set namespace if provided
+	if argParser.HasNamespace() {
+		attributes.Namespace = dmanagerData.Namespace
+	}
+
 	// Create uploadrequest
 	uploadRequest := libdatamanager.NewLibDM(&libdatamanager.RequestConfig{
 		URL:          dmanagerData.Host,
 		Username:     dmanagerData.Username,
 		SessionToken: unencodedToken,
-	}).NewUploadRequest(filename, libdatamanager.FileAttributes{
-		Groups: []string{"AURpackage"},
-	})
+	}).NewUploadRequest(filename, attributes)
 
 	// Open file
 	f, err := os.Open(buildResult.Archive)
