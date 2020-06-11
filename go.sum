@@ -7,6 +7,8 @@ github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03
 github.com/DataManager-Go/libdatamanager v1.0.10/go.mod h1:iLQrv9tvUkcx9nA+x51eUR9juV0JgIOnFrhPISxWWUE=
 github.com/DataManager-Go/libdatamanager v1.2.4 h1:K5AHX32XPLO4RyU3WrE0tBSYVDAaWWrwuuKBMq5RMVs=
 github.com/DataManager-Go/libdatamanager v1.2.4/go.mod h1:s2ywdIZpWEfgxJ7iMtCOdLCNaHVnO8dr7e9cE2NzgL4=
+github.com/DataManager-Go/libdatamanager v1.2.7 h1:qwHmroP5vW4qZu7NX1tM80sYv4puNt/X9GtghQFmUOQ=
+github.com/DataManager-Go/libdatamanager v1.2.7/go.mod h1:QHVsduLyGDmvSh+OG5XUgijhjTBfWV+nP9zocWY7zt0=
 github.com/DataManager-Go/libdatamanager/config v0.0.0-20200421144809-c51b64037a89/go.mod h1:RfoOPe8dQgubuBUmtqEYu1Ny0fT+htZH/ArrEl0dcHQ=
 github.com/JojiiOfficial/LibRemotebuild v0.0.3 h1:MdXvqIlVcdXCcBf/XDbPxvhCF+Wwurijr4J7kNeNjI0=
 github.com/JojiiOfficial/LibRemotebuild v0.0.3/go.mod h1:NS5D8NlALafEHK8LmRctE22sM4JjOlZyCwoXA//P2nU=
@@ -27,6 +29,8 @@ github.com/JojiiOfficial/configService v0.0.0-20200219132202-6e71512e2e28/go.mod
 github.com/JojiiOfficial/gaw v1.2.0/go.mod h1:Y0hrpN0iX0L5bBf/8+kIER7R/m4GTNuKkifXisMG4S4=
 github.com/JojiiOfficial/gaw v1.2.1 h1:zwVLf5TQrXQF+pwI+/sVsfxTxmAZbZ5BjVT/nKxb2Ck=
 github.com/JojiiOfficial/gaw v1.2.1/go.mod h1:Y0hrpN0iX0L5bBf/8+kIER7R/m4GTNuKkifXisMG4S4=
+github.com/JojiiOfficial/gaw v1.2.5 h1:wbguzCqNaCBMYH1a9D6EHW2aIG21uo6CS6qaHLi5I3s=
+github.com/JojiiOfficial/gaw v1.2.5/go.mod h1:Y0hrpN0iX0L5bBf/8+kIER7R/m4GTNuKkifXisMG4S4=
 github.com/Microsoft/go-winio v0.4.15-0.20190919025122-fc70bd9a86b5/go.mod h1:tTuCMEN+UleMWgg9dVx4Hu52b1bJo+59jBh3ajtinzw=
 github.com/Microsoft/go-winio v0.4.15-0.20200113171025-3fe6c5262873 h1:93nQ7k53GjoMQ07HVP8g6Zj1fQZDDj7Xy2VkNNtvX8o=
 github.com/Microsoft/go-winio v0.4.15-0.20200113171025-3fe6c5262873/go.mod h1:tTuCMEN+UleMWgg9dVx4Hu52b1bJo+59jBh3ajtinzw=
