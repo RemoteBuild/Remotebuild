@@ -9,6 +9,8 @@ github.com/DataManager-Go/libdatamanager v1.2.4 h1:K5AHX32XPLO4RyU3WrE0tBSYVDAaW
 github.com/DataManager-Go/libdatamanager v1.2.4/go.mod h1:s2ywdIZpWEfgxJ7iMtCOdLCNaHVnO8dr7e9cE2NzgL4=
 github.com/DataManager-Go/libdatamanager v1.2.7 h1:qwHmroP5vW4qZu7NX1tM80sYv4puNt/X9GtghQFmUOQ=
 github.com/DataManager-Go/libdatamanager v1.2.7/go.mod h1:QHVsduLyGDmvSh+OG5XUgijhjTBfWV+nP9zocWY7zt0=
+github.com/DataManager-Go/libdatamanager v1.2.9 h1:zdQbhJ5Qoq9qq2NlP3FzFreo7O4IpFFTX49gdvBgk3k=
+github.com/DataManager-Go/libdatamanager v1.2.9/go.mod h1:q3Nxbk8mvaiT9HRgRd0QkAPuh5mtAVrki7sTTaIbxCY=
 github.com/DataManager-Go/libdatamanager/config v0.0.0-20200421144809-c51b64037a89/go.mod h1:RfoOPe8dQgubuBUmtqEYu1Ny0fT+htZH/ArrEl0dcHQ=
 github.com/JojiiOfficial/LibRemotebuild v0.0.3 h1:MdXvqIlVcdXCcBf/XDbPxvhCF+Wwurijr4J7kNeNjI0=
 github.com/JojiiOfficial/LibRemotebuild v0.0.3/go.mod h1:NS5D8NlALafEHK8LmRctE22sM4JjOlZyCwoXA//P2nU=
@@ -158,6 +160,10 @@ github.com/jinzhu/now v1.0.1/go.mod h1:d3SSVoowX0Lcu0IBviAWJpolVfI5UJVZZ7cO71lE/
 github.com/kisielk/errcheck v1.1.0/go.mod h1:EZBBE59ingxPouuu3KfxchcWSUPOHkagtvWXihfKN4Q=
 github.com/kisielk/errcheck v1.2.0/go.mod h1:/BMXB+zMLi60iA8Vv6Ksmxu/1UDYcXs4uQLJ+jE2L00=
 github.com/kisielk/gotool v1.0.0/go.mod h1:XhKaO+MFFWcvkIS/tQcRk01m1F5IRFswLeQ+oQHNcck=
+github.com/klauspost/compress v1.10.8 h1:eLeJ3dr/Y9+XRfJT4l+8ZjmtB5RPJhucH2HeCV5+IZY=
+github.com/klauspost/compress v1.10.8/go.mod h1:aoV0uJVorq1K+umq18yTdKaF57EivdYsUV+/s2qKfXs=
+github.com/klauspost/pgzip v1.2.4 h1:TQ7CNpYKovDOmqzRHKxJh0BeaBI7UdQZYc6p7pMQh1A=
+github.com/klauspost/pgzip v1.2.4/go.mod h1:Ch1tH69qFZu15pkjo5kYi6mth2Zzwzt50oCQKQE9RUs=
 github.com/konsorten/go-windows-terminal-sequences v1.0.1/go.mod h1:T0+1ngSBFLxvqU3pZ+m/2kptfBszLMUkC4ZK/EgS/cQ=
 github.com/konsorten/go-windows-terminal-sequences v1.0.3 h1:CE8S1cTafDpPvMhIxNJKvHsGVBgn1xWYf1NbHQhywc8=
 github.com/konsorten/go-windows-terminal-sequences v1.0.3/go.mod h1:T0+1ngSBFLxvqU3pZ+m/2kptfBszLMUkC4ZK/EgS/cQ=
