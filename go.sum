@@ -35,6 +35,8 @@ github.com/JojiiOfficial/gaw v1.2.5 h1:wbguzCqNaCBMYH1a9D6EHW2aIG21uo6CS6qaHLi5I
 github.com/JojiiOfficial/gaw v1.2.5/go.mod h1:Y0hrpN0iX0L5bBf/8+kIER7R/m4GTNuKkifXisMG4S4=
 github.com/JojiiOfficial/gaw v1.2.6 h1:JU8GDvykk2IG6Kevw5aVqTuRO+kbpZXZ8yBfVgTU0t0=
 github.com/JojiiOfficial/gaw v1.2.6/go.mod h1:Y0hrpN0iX0L5bBf/8+kIER7R/m4GTNuKkifXisMG4S4=
+github.com/JojiiOfficial/gaw v1.2.8 h1:crLd2hrRvTlCClZDtwqnr8AoVKs3uQAk8B2AdOfUCsg=
+github.com/JojiiOfficial/gaw v1.2.8/go.mod h1:fPm2wG1z8xSCmfkqq9V5iHdlgLUpkRx73tSO9efhJP0=
 github.com/Microsoft/go-winio v0.4.15-0.20190919025122-fc70bd9a86b5/go.mod h1:tTuCMEN+UleMWgg9dVx4Hu52b1bJo+59jBh3ajtinzw=
 github.com/Microsoft/go-winio v0.4.15-0.20200113171025-3fe6c5262873 h1:93nQ7k53GjoMQ07HVP8g6Zj1fQZDDj7Xy2VkNNtvX8o=
 github.com/Microsoft/go-winio v0.4.15-0.20200113171025-3fe6c5262873/go.mod h1:tTuCMEN+UleMWgg9dVx4Hu52b1bJo+59jBh3ajtinzw=
