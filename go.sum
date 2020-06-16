@@ -13,6 +13,8 @@ github.com/DataManager-Go/libdatamanager v1.2.9 h1:zdQbhJ5Qoq9qq2NlP3FzFreo7O4Ip
 github.com/DataManager-Go/libdatamanager v1.2.9/go.mod h1:q3Nxbk8mvaiT9HRgRd0QkAPuh5mtAVrki7sTTaIbxCY=
 github.com/DataManager-Go/libdatamanager v1.3.0 h1:0WvHBwPgzX5GFsKYvMoF8WRgQJfr0+lBwI4e0CU+Exc=
 github.com/DataManager-Go/libdatamanager v1.3.0/go.mod h1:8QzTM9YaJte35gQJ6xZNgQdoyYwBKK6KUtdibrqDXiM=
+github.com/DataManager-Go/libdatamanager v1.3.1 h1:LIv3nVE7uaDovmHHMcbjTTEiBEkUWnN44IrleYKi2cc=
+github.com/DataManager-Go/libdatamanager v1.3.1/go.mod h1:OwF4DArBjLIwqLGZ9L1OA5sYJ1y1ijiYnIZSiACmIgA=
 github.com/DataManager-Go/libdatamanager/config v0.0.0-20200421144809-c51b64037a89/go.mod h1:RfoOPe8dQgubuBUmtqEYu1Ny0fT+htZH/ArrEl0dcHQ=
 github.com/JojiiOfficial/LibRemotebuild v0.0.3 h1:MdXvqIlVcdXCcBf/XDbPxvhCF+Wwurijr4J7kNeNjI0=
 github.com/JojiiOfficial/LibRemotebuild v0.0.3/go.mod h1:NS5D8NlALafEHK8LmRctE22sM4JjOlZyCwoXA//P2nU=
