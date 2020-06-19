@@ -17,7 +17,7 @@ require (
 	github.com/golang/protobuf v1.4.2 // indirect
 	github.com/gorilla/mux v1.7.4
 	github.com/jcmturner/gokrb5/v8 v8.3.0 // indirect
-	github.com/jinzhu/gorm v1.9.13
+	github.com/jinzhu/gorm v1.9.14
 	github.com/lib/pq v1.6.0 // indirect
 	github.com/mattn/go-colorable v0.1.6 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
