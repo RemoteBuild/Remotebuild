@@ -4,7 +4,7 @@ go 1.14
 
 require (
 	github.com/DataManager-Go/libdatamanager v1.3.2
-	github.com/JojiiOfficial/LibRemotebuild v0.1.3
+	github.com/JojiiOfficial/LibRemotebuild v0.1.4
 	github.com/JojiiOfficial/configService v0.0.0-20200219132202-6e71512e2e28
 	github.com/JojiiOfficial/gaw v1.2.8
 	github.com/Microsoft/hcsshim v0.8.9 // indirect
