@@ -11,7 +11,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-//APIService the service handling the API
+// APIService the service handling the API
 type APIService struct {
 	router        *mux.Router
 	config        *models.Config
@@ -19,13 +19,13 @@ type APIService struct {
 	HTTPTLSServer *http.Server
 }
 
-//NewAPIService create new API service
+// NewAPIService create new API service
 func NewAPIService(config *models.Config, getRouter func() *mux.Router) *APIService {
 	router := getRouter()
 
 	var httpServer, httpsServer *http.Server
 
-	//Init http server
+	// Init http server
 	if config.Webserver.HTTP.Enabled {
 		httpServer = &http.Server{
 			Handler:           router,
@@ -36,7 +36,7 @@ func NewAPIService(config *models.Config, getRouter func() *mux.Router) *APIServ
 		}
 	}
 
-	//Init https server
+	// Init https server
 	if config.Webserver.HTTPS.Enabled {
 		httpsServer = &http.Server{
 			Handler:      router,
@@ -59,7 +59,7 @@ func NewAPIService(config *models.Config, getRouter func() *mux.Router) *APIServ
 
 //Start the API service
 func (service *APIService) Start() {
-	//Start HTTPS if enabled
+	// Start HTTPS if enabled
 	if service.HTTPTLSServer != nil {
 		log.Infof("Server started TLS on port (%s)\n", service.config.Webserver.HTTPS.ListenAddress)
 		go (func() {
@@ -71,7 +71,7 @@ func (service *APIService) Start() {
 		})()
 	}
 
-	//Start HTTP if enabled
+	// Start HTTP if enabled
 	if service.HTTPServer != nil {
 		log.Infof("Server started HTTP on port (%s)\n", service.config.Webserver.HTTP.ListenAddress)
 		go (func() {

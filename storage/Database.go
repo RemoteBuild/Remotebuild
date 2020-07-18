@@ -20,7 +20,7 @@ func ConnectToDatabase(config *models.Config) (*gorm.DB, error) {
 		return nil, err
 	}
 
-	//Automigration
+	// Automigration
 	err = db.AutoMigrate(
 		&models.LoginSession{},
 		&models.User{},
@@ -30,16 +30,16 @@ func ConnectToDatabase(config *models.Config) (*gorm.DB, error) {
 		&services.JobQueueItem{},
 	).Error
 
-	//Return error if automigration fails
+	// Return error if automigration fails
 	if err != nil {
 		return nil, err
 	}
 
-	//Create default namespace
+	// Create default namespace
 	return db, nil
 }
 
-//CheckConnection return true if connected succesfully
+// CheckConnection return true if connected succesfully
 func CheckConnection(db *gorm.DB) (bool, error) {
 	err := db.Exec("SELECT version();").Error
 	return err == nil, err

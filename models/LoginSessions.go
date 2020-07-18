@@ -6,7 +6,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-//LoginSession session for loggedin user
+// LoginSession session for loggedin user
 type LoginSession struct {
 	gorm.Model
 	User      *User `gorm:"association_autoupdate:false;association_autocreate:false"`
@@ -19,7 +19,7 @@ type LoginSession struct {
 // SessionTokenLength length of session token
 const SessionTokenLength = 64
 
-//GetUserFromSession return user from session
+// GetUserFromSession return user from session
 func GetUserFromSession(db *gorm.DB, token string) (*User, error) {
 	var session LoginSession
 	err := db.Model(&LoginSession{}).Where(&LoginSession{

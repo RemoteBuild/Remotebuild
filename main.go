@@ -28,13 +28,13 @@ var (
 			Envar(getEnVar(EnVarConfigFile)).
 			Short('c').String()
 
-	//Server commands
-	//Server start
+	// Server commands
+	// Server start
 	serverCmd      = app.Command("server", "Commands for the server")
 	serverCmdStart = serverCmd.Command("start", "Start the server")
 
-	//Config commands
-	//Config create
+	// Config commands
+	// Config create
 	configCmd           = app.Command("config", "Commands for the config file")
 	configCmdCreate     = configCmd.Command("create", "Create config file")
 	configCmdCreateName = configCmdCreate.Arg("name", "Config filename").Default(models.GetDefaultConfig()).String()
@@ -45,9 +45,9 @@ var (
 	db     *gorm.DB
 )
 
-//Env vars
+// Env vars
 const (
-	//EnVarPrefix prefix of all used env vars
+	// EnVarPrefix prefix of all used env vars
 	EnVarPrefix = "DM"
 
 	EnVarLogLevel   = "LOG_LEVEL"
@@ -55,36 +55,36 @@ const (
 	EnVarConfigFile = "CONFIG"
 )
 
-//Return the variable using the server prefix
+// Return the variable using the server prefix
 func getEnVar(name string) string {
 	return fmt.Sprintf("%s_%s", EnVarPrefix, name)
 }
 
 func main() {
-	//Set app attributes
+	// Set app attributes
 	app.HelpFlag.Short('h')
 	app.Version(version)
 
-	//parsing the args
+	// parsing the args
 	parsed := kingpin.MustParse(app.Parse(os.Args[1:]))
 
 	setupLogger()
 
 	log.Infof("LogLevel: %s\n", *appLogLevel)
 
-	//set app logLevel
+	// set app logLevel
 	switch *appLogLevel {
 	case constants.LogLevels[0]:
-		//Debug
+		// Debug
 		log.SetLevel(log.DebugLevel)
 	case constants.LogLevels[1]:
-		//Info
+		// Info
 		log.SetLevel(log.InfoLevel)
 	case constants.LogLevels[2]:
-		//Warning
+		// Warning
 		log.SetLevel(log.WarnLevel)
 	case constants.LogLevels[3]:
-		//Error
+		// Error
 		log.SetLevel(log.ErrorLevel)
 	default:
 		fmt.Println("LogLevel not found!")
@@ -108,14 +108,14 @@ func main() {
 
 		var err error
 
-		//connect db
+		// Connect db
 		db, err = storage.ConnectToDatabase(config)
 		if err != nil {
 			log.Fatalln(err)
 			return
 		}
 
-		//Check if connected to db
+		// Check if connected to db
 		if isConnected, err := storage.CheckConnection(db); !isConnected {
 			log.Fatalln(err)
 			return
@@ -124,16 +124,16 @@ func main() {
 		log.Debug("Successfully connected to DB")
 	}
 
-	//Init gaw random seed
+	// Init gaw random seed
 	gaw.Init()
 
 	switch parsed {
-	//Server --------------------
+	// Server --------------------
 	case serverCmdStart.FullCommand():
 		{
 			startAPI()
 		}
-	//Config --------------------
+	// Config --------------------
 	case configCmdCreate.FullCommand():
 		{
 			models.InitConfig(*configCmdCreateName, true)
