@@ -34,6 +34,7 @@ type configServer struct {
 	Jobs                      jobconfig
 	AllowRegistration         bool `default:"false"`
 	KeepBuildContainer        bool
+	KeepBuildFiles            bool
 	DeleteUnusedSessionsAfter time.Duration `default:"10m"`
 	Ccache                    ccacheConfig
 }

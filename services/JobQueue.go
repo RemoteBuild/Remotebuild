@@ -59,7 +59,7 @@ func (jq *JobQueue) Load() error {
 
 	for i := range jobs {
 		// Init Job
-		err := jobs[i].Job.Init(jq.db)
+		err := jobs[i].Job.Init(jq.db, jq.config)
 		if err != nil {
 			log.Error(err)
 			continue

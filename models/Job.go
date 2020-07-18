@@ -54,6 +54,7 @@ func NewJob(db *gorm.DB, config *Config, image string, buildJob BuildJob, upload
 		Args:           args,
 		DB:             db,
 		stopLogUpdater: make(chan struct{}, 1),
+		config:         config,
 	}
 
 	job.putArgs()
@@ -82,13 +83,13 @@ func NewJob(db *gorm.DB, config *Config, image string, buildJob BuildJob, upload
 }
 
 // Init Job
-func (job *Job) Init(db *gorm.DB) error {
+func (job *Job) Init(db *gorm.DB, config *Config) error {
 	// Init channel
 	if job.stopLogUpdater == nil {
 		job.stopLogUpdater = make(chan struct{}, 1)
 	}
 
-	// Set DB
+	job.config = config
 	job.DB = db
 
 	if job.Args == nil {
@@ -163,8 +164,10 @@ func (job *Job) GetInfo() string {
 // Cleanup a job
 func (job *Job) cleanup() {
 	// Remove Data dir
-	if err := os.RemoveAll(job.DataDir); err != nil && !os.IsNotExist(err) {
-		log.Warn(err)
+	if !job.config.Server.KeepBuildFiles {
+		if err := os.RemoveAll(job.DataDir); err != nil && !os.IsNotExist(err) {
+			log.Warn(err)
+		}
 	}
 
 	// Clean Argdata
