@@ -122,48 +122,37 @@ func (buildJob *BuildJob) build(dataDir string, argParser *ArgParser) *BuildResu
 	// Parse args
 	envars, err := argParser.ParseEnvars()
 	if err != nil {
-		return &BuildResult{
-			Error: err,
-		}
+		return &BuildResult{Error: err}
 	}
 
 	// Pull image if neccessary
 	if err := buildJob.pullImageIfNeeded(buildJob.Image); err != nil {
-		return &BuildResult{
-			Error: err,
-		}
+		return &BuildResult{Error: err}
 	}
 
 	// Create container
 	container, err := buildJob.getContainer(dataDir, envars)
 	if err != nil {
-		return &BuildResult{
-			Error: err,
-		}
+		return &BuildResult{Error: err}
 	}
 
 	// Start container
 	if err = buildJob.StartContainer(container.ID, &docker.HostConfig{}); err != nil {
-		return &BuildResult{
-			Error: err,
-		}
+		return &BuildResult{Error: err}
 	}
 
 	// Wait until building is done
 	n, err := buildJob.WaitContainer(container.ID)
 	if err != nil {
-		return &BuildResult{
-			Error: err,
-		}
+		return &BuildResult{Error: err}
 	}
 
 	// Check container exit code
 	if n != 0 {
-		return &BuildResult{
-			Error: ErrorNonZeroExit,
-		}
+		return &BuildResult{Error: ErrorNonZeroExit}
 	}
 
+	// TODO change!! use resInfo
 	// Get Archive
 	archive := buildJob.getArchive(dataDir, argParser)
 
@@ -173,9 +162,7 @@ func (buildJob *BuildJob) build(dataDir string, argParser *ArgParser) *BuildResu
 
 		archive, err = buildJob.findBuiltPackage(dataDir)
 		if err != nil {
-			return &BuildResult{
-				Error: err,
-			}
+			return &BuildResult{Error: err}
 		}
 	}
 
