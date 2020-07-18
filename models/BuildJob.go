@@ -30,7 +30,7 @@ type BuildJob struct {
 
 // BuildResult result of a bulid
 type BuildResult struct {
-	Archive string
+	resinfo *ResInfo
 	Error   error
 }
 
@@ -152,27 +152,35 @@ func (buildJob *BuildJob) build(dataDir string, argParser *ArgParser) *BuildResu
 		return &BuildResult{Error: ErrorNonZeroExit}
 	}
 
-	// TODO change!! use resInfo
-	// Get Archive
-	archive := buildJob.getArchive(dataDir, argParser)
+	resInfo, err := ParseResInfo(GetResInfoPath(dataDir))
+	if err != nil || resInfo == nil {
+		log.Warn("ResInfo", err)
 
-	// If not found serach for it
-	if len(archive) == 0 {
-		log.Debug("Archive not found. Searching...")
+		// Get Archive since resinfo didn't work out
+		archive := buildJob.getArchive(dataDir, argParser)
 
-		archive, err = buildJob.findBuiltPackage(dataDir)
-		if err != nil {
-			return &BuildResult{Error: err}
+		// If not found serach for it
+		if len(archive) == 0 {
+			log.Debug("Archive not found. Searching...")
+
+			archive, err = buildJob.findBuiltPackage(dataDir)
+			if err != nil {
+				return &BuildResult{Error: err}
+			}
 		}
-	}
 
-	log.Info("archive: ", archive)
+		resInfo = &ResInfo{
+			File: archive,
+		}
+	} else {
+		resInfo.File = filepath.Join(dataDir, resInfo.File)
+	}
 
 	// Set done
 	buildJob.State = libremotebuild.JobDone
 	return &BuildResult{
 		Error:   nil,
-		Archive: archive,
+		resinfo: resInfo,
 	}
 }
 

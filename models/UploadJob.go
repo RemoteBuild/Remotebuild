@@ -100,10 +100,9 @@ func (uploadJob *UploadJob) uploadDmanager(buildResult BuildResult, argParser *A
 		}
 	}
 
-	_, filename := filepath.Split(buildResult.Archive)
-
 	attributes := libdatamanager.FileAttributes{
-		Groups: []string{"AURpackage"},
+		Groups: []string{buildResult.resinfo.Name, "AURpackage"},
+		Tags:   []string{buildResult.resinfo.Version},
 	}
 
 	// Set namespace if provided
@@ -111,15 +110,17 @@ func (uploadJob *UploadJob) uploadDmanager(buildResult BuildResult, argParser *A
 		attributes.Namespace = dmanagerData.Namespace
 	}
 
+	_, fname := filepath.Split(buildResult.resinfo.File)
+
 	// Create uploadrequest
 	uploadRequest := libdatamanager.NewLibDM(&libdatamanager.RequestConfig{
 		URL:          dmanagerData.Host,
 		Username:     dmanagerData.Username,
 		SessionToken: unencodedToken,
-	}).NewUploadRequest(filename, attributes)
+	}).NewUploadRequest(fname, attributes)
 
 	// Open file
-	f, err := os.Open(buildResult.Archive)
+	f, err := os.Open(buildResult.resinfo.File)
 	if err != nil {
 		uploadJob.State = libremotebuild.JobFailed
 		return &UploadJobResult{

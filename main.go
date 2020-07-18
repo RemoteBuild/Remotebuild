@@ -9,11 +9,9 @@ import (
 	"github.com/JojiiOfficial/Remotebuild/models"
 	"github.com/JojiiOfficial/Remotebuild/storage"
 	"github.com/JojiiOfficial/gaw"
-
 	"github.com/jinzhu/gorm"
-	log "github.com/sirupsen/logrus"
-
 	_ "github.com/jinzhu/gorm/dialects/postgres"
+	log "github.com/sirupsen/logrus"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
