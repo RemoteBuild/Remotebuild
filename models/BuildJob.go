@@ -263,7 +263,7 @@ func (buildJob *BuildJob) getContainer(dataDir string, env []string) (*docker.Co
 		HostConfig: &docker.HostConfig{
 			Mounts: mounts,
 			// Autodelete container afterwards
-			AutoRemove: true,
+			AutoRemove: !buildJob.Config.Server.KeepBuildContainer,
 		},
 	})
 

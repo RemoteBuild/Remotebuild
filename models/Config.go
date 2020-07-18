@@ -32,7 +32,8 @@ type webserverConf struct {
 type configServer struct {
 	Database                  configDBstruct
 	Jobs                      jobconfig
-	AllowRegistration         bool          `default:"false"`
+	AllowRegistration         bool `default:"false"`
+	KeepBuildContainer        bool
 	DeleteUnusedSessionsAfter time.Duration `default:"10m"`
 	Ccache                    ccacheConfig
 }
