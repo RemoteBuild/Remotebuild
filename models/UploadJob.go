@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/DataManager-Go/libdatamanager"
 	libremotebuild "github.com/JojiiOfficial/LibRemotebuild"
@@ -101,16 +102,26 @@ func (uploadJob *UploadJob) uploadDmanager(buildResult BuildResult, argParser *A
 	}
 
 	attributes := libdatamanager.FileAttributes{
-		Groups: []string{buildResult.resinfo.Name, "AURpackage"},
+		Groups: []string{buildResult.resinfo.Name},
 		Tags:   []string{buildResult.resinfo.Version},
 	}
 
 	// Set namespace if provided
 	if argParser.HasNamespace() {
 		attributes.Namespace = dmanagerData.Namespace
+	} else {
+		attributes.Groups = append(attributes.Groups, "AURPackage")
 	}
 
-	_, fname := filepath.Split(buildResult.resinfo.File)
+	// Pick human readable name
+	fname := buildResult.resinfo.Name
+	if strings.HasSuffix(buildResult.resinfo.File, ".pkg.tar.zst") {
+		fname += ".pkg.tar.zst"
+	} else if strings.HasSuffix(buildResult.resinfo.File, ".pkg.tar.xz") {
+		fname += ".pkg.tar.xz"
+	} else {
+		fname += filepath.Ext(buildResult.resinfo.File)
+	}
 
 	// Create uploadrequest
 	uploadRequest := libdatamanager.NewLibDM(&libdatamanager.RequestConfig{
@@ -119,7 +130,6 @@ func (uploadJob *UploadJob) uploadDmanager(buildResult BuildResult, argParser *A
 		SessionToken: unencodedToken,
 	}).NewUploadRequest(fname, attributes)
 
-	// Open file
 	f, err := os.Open(buildResult.resinfo.File)
 	if err != nil {
 		uploadJob.State = libremotebuild.JobFailed
