@@ -31,6 +31,7 @@ type Job struct {
 	LastLogs string // Latest logs
 	Argdata  string `grom:"type:jsonb"`
 	Info     string
+	Duration int64
 
 	Args           map[string]string `gorm:"-"` // Envars for Dockerimage
 	*gorm.DB       `gorm:"-"`

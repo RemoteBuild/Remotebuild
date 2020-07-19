@@ -52,6 +52,13 @@ func addJob(handlerData HandlerData, w http.ResponseWriter, r *http.Request) {
 
 // listJobs view the queue
 func listJobs(handlerData HandlerData, w http.ResponseWriter, r *http.Request) {
+	var request libremotebuild.ListJobsRequest
+
+	// Read request
+	if !readRequestLimited(w, r, &request, handlerData.Config.Webserver.MaxRequestBodyLength) {
+		return
+	}
+
 	jobs := handlerData.JobService.Queue.GetJobs()
 	jobInfos := make([]libremotebuild.JobInfo, len(jobs))
 
@@ -68,18 +75,33 @@ func listJobs(handlerData HandlerData, w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Build response
-	resp := libremotebuild.ListJobsResponse{
-		Jobs: jobInfos,
+	limit := 10
+	if request.Limit > 0 {
+		limit = request.Limit
+
+		if limit <= len(jobInfos) {
+			jobInfos = jobInfos[len(jobInfos)-limit:]
+			limit = 0
+		}
+
+		// Calculate new limit for old jobs
+		limit = limit - len(jobInfos)
 	}
 
-	// Append old jobs
-	oldJobs, err := handlerData.JobService.GetOldJobs(2)
-	if err != nil {
-		log.Warn(err)
-	} else {
+	resp := libremotebuild.ListJobsResponse{Jobs: jobInfos}
+
+	// Get old jobs
+	if limit > 0 {
+		oldJobs, err := handlerData.JobService.GetOldJobs(limit)
+		if err != nil && err != gorm.ErrRecordNotFound {
+			sendResponse(w, models.ResponseError, "", nil, http.StatusInternalServerError)
+			return
+		}
+
+		// Append old jobs
 		for i := range oldJobs {
 			resp.Jobs = append(resp.Jobs, oldJobs[i].ToJobInfo())
+
 		}
 	}
 
