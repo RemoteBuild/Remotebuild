@@ -4,7 +4,7 @@ go 1.14
 
 require (
 	github.com/DataManager-Go/libdatamanager v1.3.8
-	github.com/JojiiOfficial/LibRemotebuild v0.1.4
+	github.com/JojiiOfficial/LibRemotebuild v0.1.6
 	github.com/JojiiOfficial/configService v0.0.0-20200219132202-6e71512e2e28
 	github.com/JojiiOfficial/gaw v1.2.8
 	github.com/Microsoft/hcsshim v0.8.9 // indirect
@@ -16,14 +16,14 @@ require (
 	github.com/fsouza/go-dockerclient v1.6.5
 	github.com/golang/protobuf v1.4.2 // indirect
 	github.com/gorilla/mux v1.7.4
-	github.com/jinzhu/gorm v1.9.14
+	github.com/jinzhu/gorm v1.9.15
 	github.com/lib/pq v1.7.0 // indirect
 	github.com/mattn/go-colorable v0.1.7 // indirect
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/sirupsen/logrus v1.6.0
-	golang.org/x/net v0.0.0-20200625001655-4c5254603344 // indirect
+	golang.org/x/net v0.0.0-20200707034311-ab3426394381 // indirect
 	golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208 // indirect
 	golang.org/x/sys v0.0.0-20200625212154-ddb9806d33ae // indirect
 	google.golang.org/genproto v0.0.0-20200715011427-11fb19a81f2c // indirect
