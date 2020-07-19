@@ -107,6 +107,13 @@ var (
 			HandlerFunc: getLogs,
 			HandlerType: sessionRequest,
 		},
+		Route{
+			Name:        "SetState",
+			Pattern:     "/job/state/{newState}",
+			Method:      PUTMethod,
+			HandlerFunc: setState,
+			HandlerType: sessionRequest,
+		},
 
 		// Ccache
 		Route{

@@ -8,6 +8,8 @@ import (
 	libremotebuild "github.com/JojiiOfficial/LibRemotebuild"
 	"github.com/JojiiOfficial/Remotebuild/models"
 	"github.com/JojiiOfficial/Remotebuild/services"
+	"github.com/JojiiOfficial/gaw"
+	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
 	log "github.com/sirupsen/logrus"
 )
@@ -104,7 +106,7 @@ func cancelJob(handlerData HandlerData, w http.ResponseWriter, r *http.Request) 
 	job.Job.Cancel()
 	job.Deleted = true
 
-	if err := job.Job.Save().Error; err != nil {
+	if err := job.Job.Save(); err != nil {
 		log.Info(err)
 	}
 
@@ -140,10 +142,11 @@ func getLogs(handlerData HandlerData, w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 
 		// Send logs
-		if err := job.Job.GetLogs(requestTime, request.Since.Unix(), w, true); err != nil {
+		if err := job.Job.GetLogs(requestTime, request.Since.Unix(), w, true); err != nil && err != models.ErrJobNotRunning {
 			log.Error(err)
 		}
 	} else {
+
 		// If no runnig job with requested ID was found
 		logs, err := handlerData.JobService.GetOldLogs(request.JobID)
 		if err != nil {
@@ -160,4 +163,48 @@ func getLogs(handlerData HandlerData, w http.ResponseWriter, r *http.Request) {
 
 		w.Write([]byte(logs))
 	}
+}
+
+// Sets the jobs state to either paused or running
+func setState(handlerData HandlerData, w http.ResponseWriter, r *http.Request) {
+	v := mux.Vars(r)
+	newState, has := v["newState"]
+	if !has || !gaw.IsInStringArray(newState, []string{"pause", "resume"}) {
+		sendResponse(w, models.ResponseError, "Bad request", nil, http.StatusBadRequest)
+		return
+	}
+
+	// Parse request
+	var request libremotebuild.JobRequest
+	if !readRequestLimited(w, r, &request, handlerData.Config.Webserver.MaxRequestBodyLength) {
+		return
+	}
+
+	// Find Job in Queue
+	job := handlerData.JobService.Queue.FindJob(request.JobID)
+	if job == nil {
+		sendResponse(w, models.ResponseError, "No job found in queue", nil, http.StatusNotFound)
+		return
+	}
+
+	// Check if a container is running
+	if len(job.Job.BuildJob.ContainerID) == 0 {
+		sendResponse(w, models.ResponseError, "No container running for job", nil, http.StatusUnprocessableEntity)
+		return
+	}
+
+	var err error
+	switch newState {
+	case "pause":
+		err = job.Job.BuildJob.Pause()
+	case "resume":
+		err = job.Job.BuildJob.Resume()
+	}
+
+	if err != nil {
+		sendResponse(w, models.ResponseError, err.Error(), nil, http.StatusInternalServerError)
+		return
+	}
+
+	sendResponse(w, models.ResponseSuccess, "", nil)
 }

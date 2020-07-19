@@ -3,9 +3,7 @@ package models
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"path/filepath"
-	"strings"
 
 	libremotebuild "github.com/JojiiOfficial/LibRemotebuild"
 	docker "github.com/fsouza/go-dockerclient"
@@ -126,7 +124,7 @@ func (buildJob *BuildJob) build(dataDir string, argParser *ArgParser) *BuildResu
 	}
 
 	// Pull image if neccessary
-	if err := buildJob.pullImageIfNeeded(buildJob.Image); err != nil {
+	if err := buildJob.pullImage(buildJob.Image); err != nil {
 		return &BuildResult{Error: err}
 	}
 
@@ -147,6 +145,10 @@ func (buildJob *BuildJob) build(dataDir string, argParser *ArgParser) *BuildResu
 		return &BuildResult{Error: err}
 	}
 
+	// No Container should be assigned
+	// to this job anymore
+	buildJob.ContainerID = ""
+
 	// Check container exit code
 	if n != 0 {
 		return &BuildResult{Error: ErrorNonZeroExit}
@@ -154,27 +156,10 @@ func (buildJob *BuildJob) build(dataDir string, argParser *ArgParser) *BuildResu
 
 	resInfo, err := ParseResInfo(GetResInfoPath(dataDir))
 	if err != nil || resInfo == nil {
-		log.Warn("ResInfo", err)
-
-		// Get Archive since resinfo didn't work out
-		archive := buildJob.getArchive(dataDir, argParser)
-
-		// If not found serach for it
-		if len(archive) == 0 {
-			log.Debug("Archive not found. Searching...")
-
-			archive, err = buildJob.findBuiltPackage(dataDir)
-			if err != nil {
-				return &BuildResult{Error: err}
-			}
-		}
-
-		resInfo = &ResInfo{
-			File: archive,
-		}
-	} else {
-		resInfo.File = filepath.Join(dataDir, resInfo.File)
+		return &BuildResult{Error: err}
 	}
+
+	resInfo.File = filepath.Join(dataDir, resInfo.File)
 
 	// Set done
 	buildJob.State = libremotebuild.JobDone
@@ -184,39 +169,6 @@ func (buildJob *BuildJob) build(dataDir string, argParser *ArgParser) *BuildResu
 	}
 }
 
-// Find the built archive
-func (buildJob *BuildJob) getArchive(dir string, argParser *ArgParser) string {
-	var fileName string
-
-	switch buildJob.Type {
-	case libremotebuild.JobAUR:
-		fileName = argParser.getAURRepoName() + ".pkg.tar.xz"
-	}
-
-	if len(fileName) == 0 {
-		return ""
-	}
-
-	return filepath.Join(dir, fileName)
-}
-
-// Return built archive
-func (buildJob *BuildJob) findBuiltPackage(dir string) (string, error) {
-	files, err := ioutil.ReadDir(dir)
-	if err != nil {
-		return "", err
-	}
-
-	for _, fileinfo := range files {
-		if strings.HasSuffix(fileinfo.Name(), "pkg.tar.xz") {
-			return fileinfo.Name(), nil
-		}
-	}
-
-	return "", nil
-}
-
-// Create build container
 func (buildJob *BuildJob) getContainer(dataDir string, env []string) (*docker.Container, error) {
 	// Set CCACHE environment variables
 	if buildJob.UseCcache {
@@ -271,7 +223,7 @@ func (buildJob *BuildJob) getContainer(dataDir string, env []string) (*docker.Co
 
 func (buildJob *BuildJob) hasImage(image string) (bool, error) {
 	// Get all images
-	images, err := buildJob.Client.ListImages(docker.ListImagesOptions{All: false})
+	images, err := buildJob.ListImages(docker.ListImagesOptions{All: false})
 	if err != nil {
 		return false, err
 	}
@@ -288,7 +240,7 @@ func (buildJob *BuildJob) hasImage(image string) (bool, error) {
 	return false, nil
 }
 
-func (buildJob *BuildJob) pullImageIfNeeded(image string) error {
+func (buildJob *BuildJob) pullImage(image string) error {
 	// Check if image is present
 	hasImage, err := buildJob.hasImage(image)
 	if err != nil || hasImage {
@@ -297,7 +249,7 @@ func (buildJob *BuildJob) pullImageIfNeeded(image string) error {
 
 	log.Debug("Pulling Image ", image)
 
-	// Pull image
+	// Actually pull the image
 	err = buildJob.PullImage(docker.PullImageOptions{
 		Registry:   "docker.io",
 		Repository: image,
@@ -310,6 +262,34 @@ func (buildJob *BuildJob) pullImageIfNeeded(image string) error {
 	}
 
 	return err
+}
+
+// Pause buildjob
+func (buildJob *BuildJob) Pause() error {
+	if len(buildJob.ContainerID) > 0 && buildJob.State != libremotebuild.JobPaused {
+		err := buildJob.PauseContainer(buildJob.ContainerID)
+		if err != nil {
+			return err
+		}
+
+		buildJob.State = libremotebuild.JobPaused
+	}
+
+	return nil
+}
+
+// Resume buildjob
+func (buildJob *BuildJob) Resume() error {
+	if len(buildJob.ContainerID) > 0 && buildJob.State == libremotebuild.JobPaused {
+		err := buildJob.Client.UnpauseContainer(buildJob.ContainerID)
+		if err != nil {
+			return err
+		}
+
+		buildJob.State = libremotebuild.JobRunning
+	}
+
+	return nil
 }
 
 // Stop building
