@@ -181,7 +181,7 @@ func (job *Job) cleanup() {
 // Save job
 func (job *Job) Save() (err error) {
 	// Save Buildjob
-	if err = job.DB.Save(job.BuildJob).Error; err != nil {
+	if err = job.BuildJob.Save(job.DB); err != nil {
 		return err
 	}
 
@@ -218,7 +218,8 @@ func (job *Job) Run() error {
 	argParser := NewArgParser(job.Args, job.BuildJob.Type)
 
 	// Run Build
-	buildResult := job.BuildJob.Run(job.DataDir, argParser)
+	buildResult, duration := job.BuildJob.Run(job.DataDir, argParser)
+
 	if buildResult.Error != nil {
 		if buildResult.Error != ErrorJobCancelled {
 			job.SetState(libremotebuild.JobFailed)
@@ -226,6 +227,13 @@ func (job *Job) Run() error {
 		}
 
 		return buildResult.Error
+	}
+
+	job.Duration = int64(duration.Seconds())
+
+	err := job.Save()
+	if err != nil {
+		return err
 	}
 
 	if job.Cancelled {
@@ -331,5 +339,6 @@ func (job Job) ToJobInfo() libremotebuild.JobInfo {
 		BuildType:  job.BuildJob.Type,
 		Status:     job.GetState(),
 		UploadType: job.UploadJob.Type,
+		Duration:   time.Duration(job.Duration) * time.Second,
 	}
 }

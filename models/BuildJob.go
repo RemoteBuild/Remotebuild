@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"path/filepath"
+	"time"
 
 	libremotebuild "github.com/JojiiOfficial/LibRemotebuild"
 	docker "github.com/fsouza/go-dockerclient"
@@ -66,13 +67,11 @@ func (buildJob *BuildJob) Init() error {
 }
 
 // Run a buildjob (start but await)
-func (buildJob *BuildJob) Run(dataDir string, argParser *ArgParser) *BuildResult {
+func (buildJob *BuildJob) Run(dataDir string, argParser *ArgParser) (*BuildResult, *time.Duration) {
 	// Init buildJob
 	if err := buildJob.Init(); err != nil {
 		buildJob.State = libremotebuild.JobFailed
-		return &BuildResult{
-			Error: err,
-		}
+		return &BuildResult{Error: err}, nil
 	}
 
 	log.Debug("Run BuildJob ", buildJob.ID)
@@ -80,10 +79,11 @@ func (buildJob *BuildJob) Run(dataDir string, argParser *ArgParser) *BuildResult
 
 	buildDone := make(chan bool, 1)
 	var result *BuildResult
+	var duration *time.Duration
 
 	// Run build
 	go func() {
-		result = buildJob.build(dataDir, argParser)
+		result, duration = buildJob.build(dataDir, argParser)
 		buildDone <- true
 	}()
 
@@ -91,15 +91,18 @@ func (buildJob *BuildJob) Run(dataDir string, argParser *ArgParser) *BuildResult
 	select {
 	case <-buildDone:
 		// On done
-		return result
+		return result, duration
 	case <-buildJob.cancelChan:
 		// On cancel
 		buildJob.Stop()
 		buildJob.State = libremotebuild.JobCancelled
-		return &BuildResult{
-			Error: ErrorJobCancelled,
-		}
+		return &BuildResult{Error: ErrorJobCancelled}, duration
 	}
+}
+
+// Save Buildjob
+func (buildJob *BuildJob) Save(db *gorm.DB) error {
+	return db.Save(buildJob).Error
 }
 
 // Connect to dockerClient
@@ -116,34 +119,38 @@ func (buildJob *BuildJob) connectDocker() error {
 }
 
 // Build the package
-func (buildJob *BuildJob) build(dataDir string, argParser *ArgParser) *BuildResult {
+func (buildJob *BuildJob) build(dataDir string, argParser *ArgParser) (*BuildResult, *time.Duration) {
 	// Parse args
 	envars, err := argParser.ParseEnvars()
 	if err != nil {
-		return &BuildResult{Error: err}
+		return &BuildResult{Error: err}, nil
 	}
 
 	// Pull image if neccessary
 	if err := buildJob.pullImage(buildJob.Image); err != nil {
-		return &BuildResult{Error: err}
+		return &BuildResult{Error: err}, nil
 	}
 
 	// Create container
 	container, err := buildJob.getContainer(dataDir, envars)
 	if err != nil {
-		return &BuildResult{Error: err}
+		return &BuildResult{Error: err}, nil
 	}
+
+	start := time.Now()
 
 	// Start container
 	if err = buildJob.StartContainer(container.ID, &docker.HostConfig{}); err != nil {
-		return &BuildResult{Error: err}
+		return &BuildResult{Error: err}, nil
 	}
 
 	// Wait until building is done
 	n, err := buildJob.WaitContainer(container.ID)
 	if err != nil {
-		return &BuildResult{Error: err}
+		return &BuildResult{Error: err}, nil
 	}
+
+	duration := time.Since(start)
 
 	// No Container should be assigned
 	// to this job anymore
@@ -151,12 +158,12 @@ func (buildJob *BuildJob) build(dataDir string, argParser *ArgParser) *BuildResu
 
 	// Check container exit code
 	if n != 0 {
-		return &BuildResult{Error: ErrorNonZeroExit}
+		return &BuildResult{Error: ErrorNonZeroExit}, &duration
 	}
 
 	resInfo, err := ParseResInfo(GetResInfoPath(dataDir))
 	if err != nil || resInfo == nil {
-		return &BuildResult{Error: err}
+		return &BuildResult{Error: err}, &duration
 	}
 
 	resInfo.File = filepath.Join(dataDir, resInfo.File)
@@ -166,7 +173,7 @@ func (buildJob *BuildJob) build(dataDir string, argParser *ArgParser) *BuildResu
 	return &BuildResult{
 		Error:   nil,
 		resinfo: resInfo,
-	}
+	}, &duration
 }
 
 func (buildJob *BuildJob) getContainer(dataDir string, env []string) (*docker.Container, error) {
