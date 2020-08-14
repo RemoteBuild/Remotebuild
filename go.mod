@@ -16,7 +16,7 @@ require (
 	github.com/fsouza/go-dockerclient v1.6.5
 	github.com/golang/protobuf v1.4.2 // indirect
 	github.com/gorilla/mux v1.7.4
-	github.com/jinzhu/gorm v1.9.15
+	github.com/jinzhu/gorm v1.9.16
 	github.com/lib/pq v1.7.1 // indirect
 	github.com/mattn/go-colorable v0.1.7 // indirect
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible // indirect
