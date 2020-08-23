@@ -4,7 +4,6 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/DataManager-Go/libdatamanager"
 	libremotebuild "github.com/JojiiOfficial/LibRemotebuild"
@@ -113,37 +112,29 @@ func (uploadJob *UploadJob) uploadDmanager(buildResult BuildResult, argParser *A
 		attributes.Groups = append(attributes.Groups, "AURPackage")
 	}
 
-	// Pick human readable name
-	fname := buildResult.resinfo.Name
-	if strings.HasSuffix(buildResult.resinfo.File, ".pkg.tar.zst") {
-		fname += ".pkg.tar.zst"
-	} else if strings.HasSuffix(buildResult.resinfo.File, ".pkg.tar.xz") {
-		fname += ".pkg.tar.xz"
-	} else {
-		fname += filepath.Ext(buildResult.resinfo.File)
-	}
+	for _, file := range buildResult.resinfo.Files {
+		// Create uploadrequest
+		uploadRequest := libdatamanager.NewLibDM(&libdatamanager.RequestConfig{
+			URL:          dmanagerData.Host,
+			Username:     dmanagerData.Username,
+			SessionToken: unencodedToken,
+		}).NewUploadRequest(filepath.Base(file), attributes)
 
-	// Create uploadrequest
-	uploadRequest := libdatamanager.NewLibDM(&libdatamanager.RequestConfig{
-		URL:          dmanagerData.Host,
-		Username:     dmanagerData.Username,
-		SessionToken: unencodedToken,
-	}).NewUploadRequest(fname, attributes)
-
-	f, err := os.Open(buildResult.resinfo.File)
-	if err != nil {
-		uploadJob.State = libremotebuild.JobFailed
-		return &UploadJobResult{
-			Error: err,
+		f, err := os.Open(file)
+		if err != nil {
+			uploadJob.State = libremotebuild.JobFailed
+			return &UploadJobResult{
+				Error: err,
+			}
 		}
-	}
 
-	// Upload file
-	_, err = uploadRequest.UploadFile(f, nil, uploadJob.cancelChan)
-	if err != nil {
-		uploadJob.State = libremotebuild.JobFailed
-		return &UploadJobResult{
-			Error: err,
+		// Upload file
+		_, err = uploadRequest.UploadFile(f, nil, uploadJob.cancelChan)
+		if err != nil {
+			uploadJob.State = libremotebuild.JobFailed
+			return &UploadJobResult{
+				Error: err,
+			}
 		}
 	}
 

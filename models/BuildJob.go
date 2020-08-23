@@ -3,7 +3,6 @@ package models
 import (
 	"fmt"
 	"io"
-	"path/filepath"
 	"time"
 
 	libremotebuild "github.com/JojiiOfficial/LibRemotebuild"
@@ -161,12 +160,10 @@ func (buildJob *BuildJob) build(dataDir string, argParser *ArgParser) (*BuildRes
 		return &BuildResult{Error: ErrorNonZeroExit}, &duration
 	}
 
-	resInfo, err := ParseResInfo(GetResInfoPath(dataDir))
+	resInfo, err := ParseResInfo(dataDir, GetResInfoPath(dataDir))
 	if err != nil || resInfo == nil {
 		return &BuildResult{Error: err}, &duration
 	}
-
-	resInfo.File = filepath.Join(dataDir, resInfo.File)
 
 	// Set done
 	buildJob.State = libremotebuild.JobDone

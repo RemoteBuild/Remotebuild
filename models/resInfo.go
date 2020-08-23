@@ -22,7 +22,7 @@ var ErrInvalidFormat = errors.New("Invalid resInfo format")
 type ResInfo struct {
 	Name    string
 	Version string
-	File    string
+	Files   []string
 }
 
 // GetResInfoPath return path for resinfo file
@@ -31,7 +31,7 @@ func GetResInfoPath(base string) string {
 }
 
 // ParseResInfo parses result info from file
-func ParseResInfo(file string) (*ResInfo, error) {
+func ParseResInfo(dataDir, file string) (*ResInfo, error) {
 	s, err := os.Stat(file)
 	if err != nil {
 		return nil, err
@@ -55,15 +55,24 @@ func ParseResInfo(file string) (*ResInfo, error) {
 
 	name := sContent[0]
 	version := sContent[1]
-	outFile := sContent[2]
+	outFiles := sContent[2:]
 
-	if len(name) == 0 || len(version) == 0 || len(outFile) == 0 {
+	if len(name) == 0 || len(version) == 0 || len(outFiles) == 0 {
 		return nil, ErrInvalidFormat
+	}
+
+	var newOutfiles []string
+	for i := range outFiles {
+		if len(strings.TrimSpace(outFiles[i])) == 0 {
+			continue
+		}
+
+		newOutfiles = append(newOutfiles, filepath.Join(dataDir, "pkgdest", outFiles[i]))
 	}
 
 	return &ResInfo{
 		Name:    name,
 		Version: version,
-		File:    outFile,
+		Files:   newOutfiles,
 	}, nil
 }
