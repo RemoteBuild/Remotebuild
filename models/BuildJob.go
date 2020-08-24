@@ -3,6 +3,7 @@ package models
 import (
 	"fmt"
 	"io"
+	"strings"
 	"time"
 
 	libremotebuild "github.com/JojiiOfficial/LibRemotebuild"
@@ -179,6 +180,16 @@ func (buildJob *BuildJob) getContainer(dataDir string, env []string) (*docker.Co
 		env = append(env, "USE_CCACHE=true")
 		env = append(env, "CCACHE_DIR=/ccache")
 		env = append(env, fmt.Sprintf("CCACHE_MAXSIZE=%dG", buildJob.Config.Server.Ccache.MaxSize))
+	}
+
+	// Append custom mirror if available
+	customMirror := buildJob.Config.Server.CustomMirror
+	if len(customMirror) > 0 {
+		if !strings.HasPrefix(customMirror, "Server=") {
+			customMirror = fmt.Sprintf("Server = %s", customMirror)
+		}
+
+		env = append(env, "MIRR="+customMirror)
 	}
 
 	// Mount /home/builduser on host /tmp/remotebuild_XXXXXXXXXX

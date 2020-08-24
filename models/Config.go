@@ -37,6 +37,7 @@ type configServer struct {
 	KeepBuildFiles            bool
 	DeleteUnusedSessionsAfter time.Duration `default:"10m"`
 	Ccache                    ccacheConfig
+	CustomMirror              string
 }
 
 type ccacheConfig struct {
