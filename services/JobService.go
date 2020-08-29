@@ -80,6 +80,23 @@ func (js *JobService) GetOldJobs(limit int) ([]models.Job, error) {
 	return jobs, nil
 }
 
+// GetJobInfo returns informations about a job
+func (js *JobService) GetJobInfo(jobID uint) (*models.Job, error) {
+	var job models.Job
+
+	// Load unfinished jobs
+	err := js.Model(&models.Job{}).
+		Preload("BuildJob").
+		Preload("UploadJob").
+		Where("id=?", jobID).
+		First(&job).Error
+	if err != nil && !gorm.IsRecordNotFoundError(err) {
+		return nil, err
+	}
+
+	return &job, nil
+}
+
 // GetOldLogs get old logs for job
 func (js *JobService) GetOldLogs(jobID uint) (string, error) {
 	var job models.Job

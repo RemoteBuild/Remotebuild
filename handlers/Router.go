@@ -114,6 +114,13 @@ var (
 			HandlerFunc: setState,
 			HandlerType: sessionRequest,
 		},
+		Route{
+			Name:        "Job Info",
+			Pattern:     libremotebuild.EPJobInfo,
+			Method:      GetMethod,
+			HandlerFunc: jobInfo,
+			HandlerType: sessionRequest,
+		},
 
 		// Ccache
 		Route{

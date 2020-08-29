@@ -50,6 +50,28 @@ func addJob(handlerData HandlerData, w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func jobInfo(handlerData HandlerData, w http.ResponseWriter, r *http.Request) {
+	var request libremotebuild.JobRequest
+	// Read request
+	if !readRequestLimited(w, r, &request, handlerData.Config.Webserver.MaxRequestBodyLength) {
+		return
+	}
+
+	// Get Job
+	job, err := handlerData.JobService.GetJobInfo(request.JobID)
+	if err != nil {
+		sendResponse(w, models.ResponseError, "", nil, http.StatusInternalServerError)
+		return
+	}
+
+	if job == nil {
+		sendResponse(w, models.ResponseError, "no such job found", nil, http.StatusNotFound)
+		return
+	}
+
+	sendResponse(w, models.ResponseSuccess, "", job.ToJobInfo())
+}
+
 // listJobs view the queue
 func listJobs(handlerData HandlerData, w http.ResponseWriter, r *http.Request) {
 	var request libremotebuild.ListJobsRequest
