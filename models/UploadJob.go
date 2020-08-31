@@ -7,8 +7,8 @@ import (
 
 	"github.com/DataManager-Go/libdatamanager"
 	libremotebuild "github.com/JojiiOfficial/LibRemotebuild"
-	"github.com/jinzhu/gorm"
 	log "github.com/sirupsen/logrus"
+	"gorm.io/gorm"
 )
 
 var (

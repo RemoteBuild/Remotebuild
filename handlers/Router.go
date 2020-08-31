@@ -10,7 +10,7 @@ import (
 	"github.com/JojiiOfficial/Remotebuild/services"
 
 	"github.com/JojiiOfficial/gaw"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"

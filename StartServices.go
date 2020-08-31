@@ -11,7 +11,7 @@ import (
 	"github.com/JojiiOfficial/Remotebuild/handlers"
 	"github.com/JojiiOfficial/Remotebuild/services"
 	"github.com/gorilla/mux"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -85,15 +85,6 @@ func awaitExit(httpServer *services.APIService, db *gorm.DB) {
 		}
 
 		log.Info("HTTPs server shutdown complete")
-	}
-
-	// Close db connection
-	if db != nil {
-		err := db.Close()
-		if err != nil {
-			log.Warn(err)
-		}
-		log.Info("Database shutdown complete")
 	}
 
 	log.Info("Shutting down complete")

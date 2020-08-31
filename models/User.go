@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	"github.com/JojiiOfficial/gaw"
-	"github.com/jinzhu/gorm"
 	"github.com/sirupsen/logrus"
+	"gorm.io/gorm"
 )
 
 // User user in db

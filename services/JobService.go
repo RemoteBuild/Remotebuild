@@ -1,10 +1,12 @@
 package services
 
 import (
+	"errors"
+
 	libremotebuild "github.com/JojiiOfficial/LibRemotebuild"
 	"github.com/JojiiOfficial/Remotebuild/models"
-	"github.com/jinzhu/gorm"
 	log "github.com/sirupsen/logrus"
+	"gorm.io/gorm"
 )
 
 // ContainerGetter get container for job
@@ -90,7 +92,7 @@ func (js *JobService) GetJobInfo(jobID uint) (*models.Job, error) {
 		Preload("UploadJob").
 		Where("id=?", jobID).
 		First(&job).Error
-	if err != nil && !gorm.IsRecordNotFoundError(err) {
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, err
 	}
 

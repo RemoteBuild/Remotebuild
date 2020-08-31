@@ -16,7 +16,8 @@ require (
 	github.com/fsouza/go-dockerclient v1.6.5
 	github.com/golang/protobuf v1.4.2 // indirect
 	github.com/gorilla/mux v1.8.0
-	github.com/jinzhu/gorm v1.9.16
+	github.com/jinzhu/gorm v1.9.14
+	github.com/jinzhu/now v1.1.1 // indirect
 	github.com/klauspost/compress v1.10.11 // indirect
 	github.com/lib/pq v1.8.0 // indirect
 	github.com/mattn/go-colorable v0.1.7 // indirect
@@ -27,9 +28,11 @@ require (
 	golang.org/x/net v0.0.0-20200822124328-c89045814202 // indirect
 	golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208 // indirect
 	golang.org/x/sys v0.0.0-20200828194041-157a740278f4 // indirect
-	google.golang.org/genproto v0.0.0-20200828030656-73b5761be4c5 // indirect
+	google.golang.org/genproto v0.0.0-20200829155447-2bf3329a0021 // indirect
 	google.golang.org/grpc v1.31.1 // indirect
 	google.golang.org/protobuf v1.25.0 // indirect
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 	gopkg.in/yaml.v2 v2.3.0 // indirect
+	gorm.io/driver/postgres v1.0.0
+	gorm.io/gorm v1.20.0
 )

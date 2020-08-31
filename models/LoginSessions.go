@@ -2,8 +2,8 @@ package models
 
 import (
 	"github.com/JojiiOfficial/gaw"
-	"github.com/jinzhu/gorm"
 	log "github.com/sirupsen/logrus"
+	"gorm.io/gorm"
 )
 
 // LoginSession session for loggedin user

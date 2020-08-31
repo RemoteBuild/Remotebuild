@@ -9,10 +9,11 @@ import (
 	"github.com/JojiiOfficial/Remotebuild/models"
 	"github.com/JojiiOfficial/Remotebuild/storage"
 	"github.com/JojiiOfficial/gaw"
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/postgres"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/alecthomas/kingpin.v2"
+
+	_ "gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 const version = "v0.0.1"

@@ -10,8 +10,8 @@ import (
 	"github.com/JojiiOfficial/Remotebuild/services"
 	"github.com/JojiiOfficial/gaw"
 	"github.com/gorilla/mux"
-	"github.com/jinzhu/gorm"
 	log "github.com/sirupsen/logrus"
+	"gorm.io/gorm"
 )
 
 // AddJob add a job

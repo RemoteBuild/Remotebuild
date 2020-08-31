@@ -8,8 +8,8 @@ import (
 
 	libremotebuild "github.com/JojiiOfficial/LibRemotebuild"
 	docker "github.com/fsouza/go-dockerclient"
-	"github.com/jinzhu/gorm"
 	log "github.com/sirupsen/logrus"
+	"gorm.io/gorm"
 )
 
 // BuildJob a job which builds a package

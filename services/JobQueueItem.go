@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/JojiiOfficial/Remotebuild/models"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 )
 
 // JobQueueItem Item in JobQueue

@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/JojiiOfficial/Remotebuild/models"
-	"github.com/jinzhu/gorm"
 	log "github.com/sirupsen/logrus"
+	"gorm.io/gorm"
 )
 
 // CleanupService cleanupservice cleansup stuff in background from DB
