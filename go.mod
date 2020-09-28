@@ -17,7 +17,6 @@ require (
 	github.com/golang/protobuf v1.4.2 // indirect
 	github.com/gorilla/mux v1.8.0
 	github.com/jinzhu/gorm v1.9.14
-	github.com/jinzhu/now v1.1.1 // indirect
 	github.com/klauspost/compress v1.10.11 // indirect
 	github.com/lib/pq v1.8.0 // indirect
 	github.com/mattn/go-colorable v0.1.7 // indirect
@@ -34,5 +33,5 @@ require (
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 	gopkg.in/yaml.v2 v2.3.0 // indirect
 	gorm.io/driver/postgres v1.0.0
-	gorm.io/gorm v1.20.0
+	gorm.io/gorm v1.20.2
 )
