@@ -2,6 +2,7 @@ package models
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -77,6 +78,8 @@ func (uploadJob *UploadJob) upload(buildResult BuildResult, argParser *ArgParser
 	switch uploadJob.Type {
 	case libremotebuild.DataManagerUploadType:
 		return uploadJob.uploadDmanager(buildResult, argParser)
+	case libremotebuild.LocalStorage:
+		return uploadJob.saveToLocalStorage(buildResult, argParser)
 	}
 
 	// If no uploadtype was set, return error
@@ -84,6 +87,11 @@ func (uploadJob *UploadJob) upload(buildResult BuildResult, argParser *ArgParser
 	return &UploadJobResult{
 		Error: ErrNoVaildUploadMetodPassed,
 	}
+}
+
+func (uploadJob *UploadJob) saveToLocalStorage(buildResult BuildResult, argParser *ArgParser) *UploadJobResult {
+	fmt.Println("save to local store")
+	return nil
 }
 
 // Upload to datamanager
