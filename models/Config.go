@@ -120,7 +120,7 @@ func InitConfig(confFile string, createMode bool) (*Config, bool) {
 				AllowRegistration: false,
 				Jobs: jobconfig{
 					Images: map[string]string{
-						libremotebuild.JobAUR.String(): "jojii/buildaur:v2.5",
+						libremotebuild.JobAUR.String(): "jojii/buildaur:v2.8",
 					},
 				},
 				DeleteUnusedSessionsAfter: 10 * time.Minute,
