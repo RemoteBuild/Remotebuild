@@ -91,6 +91,7 @@ func (uploadJob *UploadJob) upload(buildResult BuildResult, argParser *ArgParser
 
 func (uploadJob *UploadJob) saveToLocalStorage(buildResult BuildResult, argParser *ArgParser) *UploadJobResult {
 	fmt.Println("save to local store")
+	uploadJob.State = libremotebuild.JobDone
 	return nil
 }
 

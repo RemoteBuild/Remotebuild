@@ -114,12 +114,6 @@ func main() {
 			return
 		}
 
-		// Check if connected to db
-		if isConnected, err := storage.CheckConnection(db); !isConnected {
-			log.Fatalln(err)
-			return
-		}
-
 		log.Debug("Successfully connected to DB")
 	}
 

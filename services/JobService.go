@@ -67,7 +67,7 @@ func (js *JobService) Stop() {
 func (js *JobService) GetOldJobs(limit int) ([]models.Job, error) {
 	var jobs []models.Job
 
-	if err := js.Model(&models.Job{}).
+	if err := js.Debug().Model(&models.Job{}).
 		Joins("left join build_jobs on build_jobs.id = jobs.build_job_id").
 		Joins("left join upload_jobs on upload_jobs.id = jobs.upload_job_id").
 		Preload("BuildJob").

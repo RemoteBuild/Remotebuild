@@ -20,3 +20,5 @@ data/
 files
 .idea
 ccache
+data.db
+data.db-journal

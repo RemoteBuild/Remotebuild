@@ -2,23 +2,44 @@ package storage
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/JojiiOfficial/Remotebuild/models"
 	"github.com/JojiiOfficial/Remotebuild/services"
 	"gorm.io/driver/postgres"
+	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
 //ConnectToDatabase connects to database
 func ConnectToDatabase(config *models.Config) (*gorm.DB, error) {
-	sslMode := ""
-	if len(config.Server.Database.SSLMode) > 0 {
-		sslMode = "sslmode='" + config.Server.Database.SSLMode + "'"
+	dbType := strings.ToLower(config.Server.Database.DatabaseType)
+
+	// Use default if notset
+	if len(dbType) == 0 {
+		dbType = "sqlite"
 	}
 
-	dsn := fmt.Sprintf("host='%s' port='%d' user='%s' dbname='%s' password='%s' %s", config.Server.Database.Host, config.Server.Database.DatabasePort, config.Server.Database.Username, config.Server.Database.Database, config.Server.Database.Pass, sslMode)
+	var dialector gorm.Dialector
+	if dbType == "postgres" {
+		sslMode := ""
+		if len(config.Server.Database.SSLMode) > 0 {
+			sslMode = "sslmode='" + config.Server.Database.SSLMode + "'"
+		}
 
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+		dsn := fmt.Sprintf("host='%s' port='%d' user='%s' dbname='%s' password='%s' %s", config.Server.Database.Host, config.Server.Database.DatabasePort, config.Server.Database.Username, config.Server.Database.Database, config.Server.Database.Pass, sslMode)
+		dialector = postgres.Open(dsn)
+	} else if dbType == "sqlite" {
+		dbFile := config.Server.Database.DbFile
+		if len(config.Server.Database.DbFile) == 0 {
+			dbFile = "data.db"
+		}
+		dialector = sqlite.Open(dbFile)
+	} else {
+		return nil, fmt.Errorf("%s is not a supported database type!", dbType)
+	}
+
+	db, err := gorm.Open(dialector, &gorm.Config{})
 	if err != nil {
 		return nil, err
 	}
@@ -32,6 +53,20 @@ func ConnectToDatabase(config *models.Config) (*gorm.DB, error) {
 		&models.Job{},
 		&services.JobQueueItem{},
 	)
+
+	// Don't perform connection tests if sqlite is picked
+	if dbType == "sqlite" {
+		return db, nil
+	}
+
+	connected, err := CheckConnection(db)
+	if err != nil {
+		return nil, err
+	}
+
+	if !connected {
+		return nil, fmt.Errorf("Can't connect to DB!")
+	}
 
 	// Create default namespace
 	return db, nil

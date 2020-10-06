@@ -50,12 +50,14 @@ type jobconfig struct {
 }
 
 type configDBstruct struct {
+	DatabaseType string
 	Host         string
 	Username     string
 	Database     string
 	Pass         string
 	DatabasePort int
 	SSLMode      string
+	DbFile       string
 }
 
 //Config for HTTPS

@@ -123,7 +123,6 @@ func listJobs(handlerData HandlerData, w http.ResponseWriter, r *http.Request) {
 		// Append old jobs
 		for i := range oldJobs {
 			resp.Jobs = append(resp.Jobs, oldJobs[i].ToJobInfo())
-
 		}
 	}
 
