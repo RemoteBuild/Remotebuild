@@ -15,6 +15,6 @@ upgrade:
 	go mod verify
 
 test:
-	go test
+	go test ./...
 
 default: build

@@ -2,7 +2,6 @@ package models
 
 import (
 	"errors"
-	"fmt"
 	"os"
 	"path/filepath"
 
@@ -57,7 +56,7 @@ func (uploadJob *UploadJob) Init() {
 }
 
 // Run an upload job
-func (uploadJob *UploadJob) Run(buildResult BuildResult, argParser *ArgParser) *UploadJobResult {
+func (uploadJob *UploadJob) Run(buildResult BuildResult, argParser *ArgParser, config *Config) *UploadJobResult {
 	uploadJob.Init()
 
 	log.Debug("Run UploadJob ", uploadJob.ID)
@@ -70,16 +69,16 @@ func (uploadJob *UploadJob) Run(buildResult BuildResult, argParser *ArgParser) *
 		}
 	}
 
-	return uploadJob.upload(buildResult, argParser)
+	return uploadJob.upload(buildResult, argParser, config)
 }
 
-func (uploadJob *UploadJob) upload(buildResult BuildResult, argParser *ArgParser) *UploadJobResult {
+func (uploadJob *UploadJob) upload(buildResult BuildResult, argParser *ArgParser, config *Config) *UploadJobResult {
 	// Pick correct upload method
 	switch uploadJob.Type {
 	case libremotebuild.DataManagerUploadType:
 		return uploadJob.uploadDmanager(buildResult, argParser)
 	case libremotebuild.LocalStorage:
-		return uploadJob.saveToLocalStorage(buildResult, argParser)
+		return uploadJob.saveToLocalStorage(buildResult, argParser, config)
 	}
 
 	// If no uploadtype was set, return error
@@ -89,8 +88,19 @@ func (uploadJob *UploadJob) upload(buildResult BuildResult, argParser *ArgParser
 	}
 }
 
-func (uploadJob *UploadJob) saveToLocalStorage(buildResult BuildResult, argParser *ArgParser) *UploadJobResult {
-	fmt.Println("save to local store")
+func (uploadJob *UploadJob) saveToLocalStorage(buildResult BuildResult, argParser *ArgParser, config *Config) *UploadJobResult {
+	log.Info("save to local store")
+
+	for _, file := range buildResult.resinfo.Files {
+		// Copy all files to the LocalStoragePath
+		err := Copy(file, config.Server.LocalStoragePath)
+		if err != nil {
+			return &UploadJobResult{
+				Error: err,
+			}
+		}
+	}
+
 	uploadJob.State = libremotebuild.JobDone
 	return nil
 }

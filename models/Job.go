@@ -241,7 +241,7 @@ func (job *Job) Run() error {
 	}
 
 	// Run upload
-	uploadResult := job.UploadJob.Run(*buildResult, argParser)
+	uploadResult := job.UploadJob.Run(*buildResult, argParser, job.config)
 	if uploadResult != nil && uploadResult.Error != nil {
 		if uploadResult.Error != ErrorJobCancelled {
 			job.SetState(libremotebuild.JobFailed)
