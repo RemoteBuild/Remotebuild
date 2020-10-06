@@ -38,6 +38,7 @@ type configServer struct {
 	DeleteUnusedSessionsAfter time.Duration `default:"10m"`
 	Ccache                    ccacheConfig
 	CustomMirror              string
+	LocalStoragePath          string
 }
 
 type ccacheConfig struct {
@@ -119,13 +120,14 @@ func InitConfig(confFile string, createMode bool) (*Config, bool) {
 					DatabasePort: 5432,
 					SSLMode:      "require",
 				},
-				AllowRegistration: false,
+				AllowRegistration: true,
 				Jobs: jobconfig{
 					Images: map[string]string{
 						libremotebuild.JobAUR.String(): "jojii/buildaur:v2.8",
 					},
 				},
 				DeleteUnusedSessionsAfter: 10 * time.Minute,
+				LocalStoragePath:          "/var/remotebuild/output",
 			},
 			Webserver: webserverConf{
 				HTTP: configHTTPstruct{
@@ -202,6 +204,30 @@ func (config *Config) Check() bool {
 		log.Warn("Ccache directory is not valid")
 	} else {
 		log.Info("Ccache set up correctly! Using ", config.Server.Ccache.MaxSize, "G of diskspace for ccache")
+	}
+
+	if len(config.Server.LocalStoragePath) == 0 {
+		log.Warn("LocalStoragePath not set! This can cause erorrs if you don't use DataManagerUpload!")
+	} else {
+		// Check whether LocalStoragePath exists and create it if not
+		s, err := os.Stat(config.Server.LocalStoragePath)
+		if err != nil {
+			if os.IsNotExist(err) {
+				err = os.MkdirAll(config.Server.LocalStoragePath, 0700)
+				if err != nil {
+					log.Fatalf("Cannot create local storage path: %s", err)
+					return false
+				}
+			} else {
+				log.Fatal(err)
+				return false
+			}
+		} else {
+			if !s.IsDir() {
+				log.Fatal("LocalStoragePath exists but is not a directory!")
+			}
+		}
+
 	}
 
 	return true
