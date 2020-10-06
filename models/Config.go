@@ -189,10 +189,12 @@ func (config *Config) Check() bool {
 		}
 	}
 
-	//Check DB port
-	if config.Server.Database.DatabasePort < 1 || config.Server.Database.DatabasePort > 65535 {
-		log.Errorf("Invalid port for database %d\n", config.Server.Database.DatabasePort)
-		return false
+	if strings.ToLower(config.Server.Database.DatabaseType) == "postgres" {
+		//Check DB port
+		if config.Server.Database.DatabasePort < 1 || config.Server.Database.DatabasePort > 65535 {
+			log.Errorf("Invalid port for database %d\n", config.Server.Database.DatabasePort)
+			return false
+		}
 	}
 
 	// Print Warning if ccache is not set up properly

@@ -1,10 +1,12 @@
-# Remotebuild 
-Build your applications remotely. Currently only AUR building is supported.
+# Remotebuild
+Compile applications, packages, repositories remotely.
+
+# Supported build types
+- [x] AUR packages
 
 # Requirements
-- PostgresDB (recommended)
+- PostgresSql database (recommended)
 - Docker
-- Good Hardware 
 
 # Compile
 ```bash
@@ -12,11 +14,10 @@ make build
 ```
 
 # Concept
-* You have one build server/VM where the server app runs
+* You have one build server/VM where the server app needs to be up and running
 * Use the [client]("https://github.com/JojiiOfficial/RemoteBuildClient") to create/control jobs
-* Only one compilation can be run at the same time
-* A job exists of two sub types of jobs: Build job and Upload Job.
-* A job is run inside a docker container on the server
+* A job exists of two sub types of jobs: Build job and Upload Job
+* Only one job can be run at the same time
 
 # Setup
 * Install docker 
@@ -44,19 +45,14 @@ database:
   sslmode: require
 [...]
 ```
+<br>
 
 If you just want to test it and don't have a running PostgreSQL server, you can use following database config:
 
 ```yaml
 [...]
-  database:
-    databasetype: sqlite
-    databesFile: "testdb.db"
-    host: localhost
-    username: "postgres"
-    database: "postgres"
-    pass: "mysecretpassword"
-    databaseport: 5432
-    sslmode: disable
+database:
+  databasetype: sqlite
+  databesFile: "testdb.db"
 [...]
 ```
