@@ -15,7 +15,7 @@ make build
 
 # Concept
 * You have one build server/VM where the server app needs to be up and running
-* Use the [client]("https://github.com/JojiiOfficial/RemoteBuildClient") to create/control jobs
+* Use the [client](https://github.com/JojiiOfficial/RemoteBuildClient) to create/control jobs
 * A job exists of two sub types of jobs: Build job and Upload Job
 * Only one job can be run at the same time
 
