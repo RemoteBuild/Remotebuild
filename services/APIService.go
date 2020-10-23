@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/JojiiOfficial/Remotebuild/models"
+	"github.com/RemoteBuild/Remotebuild/models"
 
 	"github.com/gorilla/mux"
 

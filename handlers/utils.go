@@ -9,7 +9,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/JojiiOfficial/Remotebuild/models"
+	"github.com/RemoteBuild/Remotebuild/models"
 	"github.com/JojiiOfficial/gaw"
 	log "github.com/sirupsen/logrus"
 )

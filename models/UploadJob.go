@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/DataManager-Go/libdatamanager"
-	libremotebuild "github.com/JojiiOfficial/LibRemotebuild"
+	libremotebuild "github.com/RemoteBuild/LibRemotebuild"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )

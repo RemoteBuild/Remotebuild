@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	libremotebuild "github.com/JojiiOfficial/LibRemotebuild"
+	libremotebuild "github.com/RemoteBuild/LibRemotebuild"
 )
 
 var (

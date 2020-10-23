@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"time"
 
-	libremotebuild "github.com/JojiiOfficial/LibRemotebuild"
+	libremotebuild "github.com/RemoteBuild/LibRemotebuild"
 	"github.com/JojiiOfficial/gaw"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"

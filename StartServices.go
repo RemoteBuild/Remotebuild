@@ -7,9 +7,9 @@ import (
 	"syscall"
 	"time"
 
-	libremotebuild "github.com/JojiiOfficial/LibRemotebuild"
-	"github.com/JojiiOfficial/Remotebuild/handlers"
-	"github.com/JojiiOfficial/Remotebuild/services"
+	libremotebuild "github.com/RemoteBuild/LibRemotebuild"
+	"github.com/RemoteBuild/Remotebuild/handlers"
+	"github.com/RemoteBuild/Remotebuild/services"
 	"github.com/gorilla/mux"
 	"gorm.io/gorm"
 

@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	"github.com/JojiiOfficial/Remotebuild/models"
-	"github.com/JojiiOfficial/Remotebuild/services"
+	"github.com/RemoteBuild/Remotebuild/models"
+	"github.com/RemoteBuild/Remotebuild/services"
 	docker "github.com/fsouza/go-dockerclient"
 	"gorm.io/gorm"
 )

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/JojiiOfficial/Remotebuild/models"
+	"github.com/RemoteBuild/Remotebuild/models"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )

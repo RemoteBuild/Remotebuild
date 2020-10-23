@@ -5,9 +5,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/JojiiOfficial/Remotebuild/constants"
-	"github.com/JojiiOfficial/Remotebuild/models"
-	"github.com/JojiiOfficial/Remotebuild/storage"
+	"github.com/RemoteBuild/Remotebuild/constants"
+	"github.com/RemoteBuild/Remotebuild/models"
+	"github.com/RemoteBuild/Remotebuild/storage"
 	"github.com/JojiiOfficial/gaw"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/alecthomas/kingpin.v2"

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/JojiiOfficial/Remotebuild/models"
-	"github.com/JojiiOfficial/Remotebuild/services"
+	"github.com/RemoteBuild/Remotebuild/models"
+	"github.com/RemoteBuild/Remotebuild/services"
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"

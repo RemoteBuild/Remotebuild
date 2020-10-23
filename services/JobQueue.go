@@ -5,8 +5,8 @@ import (
 	"sync"
 	"time"
 
-	libremotebuild "github.com/JojiiOfficial/LibRemotebuild"
-	"github.com/JojiiOfficial/Remotebuild/models"
+	libremotebuild "github.com/RemoteBuild/LibRemotebuild"
+	"github.com/RemoteBuild/Remotebuild/models"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )

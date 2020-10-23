@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	libremotebuild "github.com/JojiiOfficial/LibRemotebuild"
-	"github.com/JojiiOfficial/Remotebuild/constants"
+	libremotebuild "github.com/RemoteBuild/LibRemotebuild"
+	"github.com/RemoteBuild/Remotebuild/constants"
 	"github.com/JojiiOfficial/configService"
 	"github.com/JojiiOfficial/gaw"
 	log "github.com/sirupsen/logrus"

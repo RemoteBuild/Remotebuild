@@ -5,9 +5,9 @@ import (
 	"strconv"
 	"time"
 
-	libremotebuild "github.com/JojiiOfficial/LibRemotebuild"
-	"github.com/JojiiOfficial/Remotebuild/models"
-	"github.com/JojiiOfficial/Remotebuild/services"
+	libremotebuild "github.com/RemoteBuild/LibRemotebuild"
+	"github.com/RemoteBuild/Remotebuild/models"
+	"github.com/RemoteBuild/Remotebuild/services"
 	"github.com/JojiiOfficial/gaw"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"

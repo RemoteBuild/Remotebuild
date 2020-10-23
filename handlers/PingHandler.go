@@ -3,8 +3,8 @@ package handlers
 import (
 	"net/http"
 
-	libremotebuild "github.com/JojiiOfficial/LibRemotebuild"
-	"github.com/JojiiOfficial/Remotebuild/models"
+	libremotebuild "github.com/RemoteBuild/LibRemotebuild"
+	"github.com/RemoteBuild/Remotebuild/models"
 )
 
 // Ping handles ping request

@@ -3,7 +3,7 @@ package services
 import (
 	"time"
 
-	"github.com/JojiiOfficial/Remotebuild/models"
+	"github.com/RemoteBuild/Remotebuild/models"
 	"gorm.io/gorm"
 )
 

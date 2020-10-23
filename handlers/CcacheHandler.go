@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"os/exec"
 
-	"github.com/JojiiOfficial/Remotebuild/models"
+	"github.com/RemoteBuild/Remotebuild/models"
 	log "github.com/sirupsen/logrus"
 )
 

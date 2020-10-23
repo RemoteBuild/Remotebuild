@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	libremotebuild "github.com/JojiiOfficial/LibRemotebuild"
+	libremotebuild "github.com/RemoteBuild/LibRemotebuild"
 	docker "github.com/fsouza/go-dockerclient"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
