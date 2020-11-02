@@ -20,6 +20,7 @@ var ErrInvalidFormat = errors.New("Invalid resInfo format")
 // ResInfo containing Information about
 // the result of an built package
 type ResInfo struct {
+	JobID   uint
 	Name    string
 	Version string
 	Files   []string
@@ -31,7 +32,7 @@ func GetResInfoPath(base string) string {
 }
 
 // ParseResInfo parses result info from file
-func ParseResInfo(dataDir, file string) (*ResInfo, error) {
+func ParseResInfo(dataDir, file string, jobID uint) (*ResInfo, error) {
 	s, err := os.Stat(file)
 	if err != nil {
 		return nil, err
@@ -74,5 +75,6 @@ func ParseResInfo(dataDir, file string) (*ResInfo, error) {
 		Name:    name,
 		Version: version,
 		Files:   newOutfiles,
+		JobID:   jobID,
 	}, nil
 }

@@ -161,7 +161,7 @@ func (buildJob *BuildJob) build(dataDir string, argParser *ArgParser) (*BuildRes
 		return &BuildResult{Error: ErrorNonZeroExit}, &duration
 	}
 
-	resInfo, err := ParseResInfo(dataDir, GetResInfoPath(dataDir))
+	resInfo, err := ParseResInfo(dataDir, GetResInfoPath(dataDir), buildJob.ID)
 	if err != nil || resInfo == nil {
 		return &BuildResult{Error: err}, &duration
 	}

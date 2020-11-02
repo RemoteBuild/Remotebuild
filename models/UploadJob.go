@@ -2,6 +2,7 @@ package models
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -88,12 +89,27 @@ func (uploadJob *UploadJob) upload(buildResult BuildResult, argParser *ArgParser
 	}
 }
 
+// Save output to the local storage directory
 func (uploadJob *UploadJob) saveToLocalStorage(buildResult BuildResult, argParser *ArgParser, config *Config) *UploadJobResult {
 	log.Info("save to local store")
 
+	path := filepath.Clean(filepath.Join(config.Server.LocalStoragePath, fmt.Sprintf("%d-%s-%s", buildResult.resinfo.JobID, buildResult.resinfo.Name, buildResult.resinfo.Version)))
+
+	// should not happen
+	if _, err := os.Stat(path); err == nil {
+		// Path already exists
+		log.Debug("Clearing old build result")
+		err = os.RemoveAll(path)
+		if err != nil {
+			return &UploadJobResult{
+				Error: err,
+			}
+		}
+	}
+
+	// Copy all files to the LocalStoragePath
 	for _, file := range buildResult.resinfo.Files {
-		// Copy all files to the LocalStoragePath
-		err := Copy(file, config.Server.LocalStoragePath)
+		err := Copy(file, path)
 		if err != nil {
 			return &UploadJobResult{
 				Error: err,
